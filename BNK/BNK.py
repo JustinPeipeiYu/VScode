@@ -6,18 +6,21 @@
 min = 1
 max = 8
 columnMap = {"a":1,"b":2,"c":3,"d":4,"e":5,"f":6,"g":7,"h":8}
+knight = "knight"
+bishop = "bishop"
+king = "king"
 
-class Knight:
-    def __init__(self):
-        self.square = self.validateInput()
+class ChessPiece:
+    def __init__(self, name):
+        self.square = self.validateInput(name)
 
-    def validateInput(self):
+    def validateInput(self,name):
         while (True):
             #flag to decide if the user's entry is valid when the while loop ends
             valid = True 
         
             #get user input
-            entry = input("What square is your knight on (ie. a1)? \n").rstrip().lstrip().lower() 
+            entry = input("What square is your %s on (ie. a1)? \n"%(name)).rstrip().lstrip().lower() 
 
             if (len(entry)!=2): #condition 1: entry is two characters long
                  valid = False
@@ -42,4 +45,4 @@ class Knight:
             
 
 #Main Program
-K = Knight()
+K = ChessPiece(knight)
