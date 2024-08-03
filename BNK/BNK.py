@@ -5,7 +5,8 @@
 
 min = 1
 max = 8
-columnMap = {"a":1,"b":2,"c":3,"d":4,"e":5,"f":6,"g":7,"h":8}
+columnMap = {"a":1,"b":2,"c":3,"d":4,"e":5,"f":6,"g":7,"h":8} #letters are keys, numbers are values
+reverseColumnMap = {}
 knight = "knight"
 bishop = "bishop"
 king = "king"
@@ -43,6 +44,28 @@ class ChessPiece:
                 continue 
         return entry    
             
+class King(ChessPiece):
+    name = knight
+    def __init__(self, name):
+        ChessPiece.__init__(self, name)
+
+class Knight(ChessPiece):
+    name = knight
+    def __init__(self, name):
+        ChessPiece.__init__(self, name)
+        
+        
+class Bishop(ChessPiece):
+    name = knight
+    def __init__(self, name):
+        ChessPiece.__init__(self, name)
 
 #Main Program
-K = ChessPiece(knight)
+K = King(king)
+N = Knight(knight)
+B = Bishop(bishop)
+
+#create reverse column mapping (numbers are keys, letters are values)
+for c in columnMap:
+    reverseColumnMap[columnMap[c]] = c
+
