@@ -1,6 +1,6 @@
 #Justin Yu
 #August 5, 2024
-#BNK: a program to checkmate with bishop, knight, and king
+#BNK: a fool-proof way to checkmate with bishop, knight, and king
 
 #static variables that all classes can use
 min = 1
@@ -24,12 +24,12 @@ class Board:
             self.points.append(point)
 
 class ChessPiece:
-    def __init__(self, pieceName, owner, board):
+    def __init__(self, pieceName, owner):
         self.pieceName = pieceName
         self.owner = owner
         self.currentPoint = self.getInput()
         self.validMoves = []
-        board.update(self.currentPoint, remove=False)
+        Board1.update(self.currentPoint, remove=False)
 
     def getInput(self):
 
@@ -76,11 +76,15 @@ class ChessPiece:
             return True
         else:
             return False
+        
+    def removeOccupied(self, points):#removes occupied squares from possible moves
+        for point in points:
+            if point in self.validMoves:
+                self.validMoves.remove(point)
     
 class King(ChessPiece):
-    def __init__(self, owner, board):
-        ChessPiece.__init__(self, king, owner, board)
-        self.GetMoves()
+    def __init__(self, owner):
+        ChessPiece.__init__(self, king, owner)
 
     def GetMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
         for i in range(-1,2):
@@ -89,15 +93,16 @@ class King(ChessPiece):
                 if not self.offBoard(newPoint): #check the next move is still within boundaries of board
                         self.validMoves.append(newPoint)
         self.validMoves.remove(self.currentPoint)#remove the center square (not a move)
+        self.removeOccupied(Board1.points)
 
 class Knight(ChessPiece):
-    def __init__(self, owner, board):
-        ChessPiece.__init__(self, knight, owner, board)
-        self.GetMoves()
+    def __init__(self, owner):
+        ChessPiece.__init__(self, knight, owner)
     
     def GetMoves(self):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
         self.Lgroup(verticalTwo=True)
         self.Lgroup(verticalTwo=False)
+        self.removeOccupied(Board1.points)
 
     def Lgroup(self, verticalTwo):
         for i in range(-1,2,2): #i covers 1 step
@@ -110,15 +115,15 @@ class Knight(ChessPiece):
                     self.validMoves.append(newPoint)
 
 class Bishop(ChessPiece):
-    def __init__(self, owner, board):
-        ChessPiece.__init__(self, bishop, owner, board)
-        self.GetMoves()
+    def __init__(self, owner):
+        ChessPiece.__init__(self, bishop, owner)
     
     def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
         self.quadrantDiagonal(1,1)#quadrant 1
         self.quadrantDiagonal(-1,1)#quadrant 2
         self.quadrantDiagonal(-1,-1)#quadrant 3
         self.quadrantDiagonal(1,-1)#qudrant 4
+        self.removeOccupied(Board1.points)
 
     def quadrantDiagonal(self, x, y):
         onboard = True
@@ -139,22 +144,27 @@ for c in ColumnLetters:
     i+=1
 
 Board1 = Board()
-K1 = King(yours, Board1)
-N1 = Knight(yours, Board1)
-B1 = Bishop(yours, Board1)
-K2 = King(theirs, Board1)
+K1 = King(yours)
+N1 = Knight(yours)
+B1 = Bishop(yours)
+K2 = King(theirs)
 #print(K1.convertToName(K1.currentPoint))
 #print(N1.convertToName(N.currentPoint))
 #print(B1.convertToName(B.currentPoint))
 #print(K2.convertToName(K2.currentPoint))
+K1.GetMoves()
+K2.GetMoves()
+N1.GetMoves()
+B1.GetMoves()
+print("----------")
+print("Your king: ")
+print(K1.validMoves)
+print("Your knight: ")
+print(N1.validMoves)
+print("Your bishop")
+print(B1.validMoves)
+print("Their king")
+print(K2.validMoves)
+print("----------")
+#print(Board1.points)
 #print("----------")
-#print(K1.validMoves)
-#print(N1.validMoves)
-#print(B1.validMoves)
-#print(K2.validMoves)
-#print("----------")
-print(Board1.points)
-#print("----------")
-
-
-
