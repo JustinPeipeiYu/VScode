@@ -12,10 +12,15 @@ yours = "your"
 theirs = "their"
 ColumnLetters = "abcdefgh"
 letterDictionary = {}
+moveAway = 1
+moveToward = 2
+middle = "mid"
+end = "end"
 
 class Board:
     def __init__(self):
         self.points = []
+        self.recommendedMoves = {}
     
     def update(self, point, remove): #update the positions of all pieces
         if (remove):
@@ -90,7 +95,41 @@ class ChessPiece:
             return dx - 1
         else:
             return dy - 1
+    
+    def calculateBestMove(b1, n1, k1, k2, strategy):#determines the best move based on positions of the pieces (order: Bishop, Knight, Your King, Their king) and strategy at that moment 
+        if (strategy == moveAway):
+             #move away for bishop
+            b1.GetMoves()
+            ChessPiece.farthestMoveAway(b1, k2)
+             #move away for knight
+            n1.GetMoves()
+            ChessPiece.farthestMoveAway(n1, k2)
+        elif (strategy==moveToward):
+            #move toward for bishop
+            b1.GetMoves()
+            ChessPiece.closestMoveTo(b1,k1)
+            #move toward for knight
+            n1.GetMoves()
+            ChessPiece.closestMoveTo(n1,k1)
 
+    def closestMoveTo(piece1, piece2):#selects from the piece 1's valid moves the closest to piece 2
+        closest = 100
+        for move in piece1.validMoves:
+            dist = ChessPiece.stepsBetween(move, piece2.currentPoint) #find the steps between piece 2 and all the valid moves for piece 1
+            if (dist < closest):
+                closest = dist #determine index of the closest option
+                i = piece1.validMoves.index(move)
+        Board1.recommendedMoves[piece1.pieceName] = piece1.validMoves[i]#use that option as the recommended
+            
+    def farthestMoveAway(piece1, piece2):#selects from piece 1's valid moves the farthest from piece 2
+        i = -1
+        farthest = 0
+        for move in piece1.validMoves:
+            dist = ChessPiece.stepsBetween(move, piece2.currentPoint)
+            if (dist > farthest):
+                farthest = dist #determine index of the closest option
+                i = piece1.validMoves.index(move)
+        Board1.recommendedMoves[piece1.pieceName] = piece1.validMoves[i]
 
 class King(ChessPiece):
     def __init__(self, owner):
@@ -153,7 +192,8 @@ for c in ColumnLetters:
     letterDictionary[c] = i
     i+=1
 
-
+#initiate board and pieces
+print("Please start with your move to play\n")
 Board1 = Board()
 K1 = King(yours)
 N1 = Knight(yours)
@@ -169,21 +209,28 @@ print("----------")
 
 print("----------")
 print("Your king: ")
-print(K1.validMoves)
 print("Your knight: ")
+print("Your bishop: ")
+print("Their king: ")
+print("----------")
+print(K1.validMoves)
 print(N1.validMoves)
-print("Your bishop")
 print(B1.validMoves)
-print("Their king")
 print(K2.validMoves)
 print("----------")
 #print(Board1.points)
 print("----------")
-'''
 K1.GetMoves()
 K2.GetMoves()
-N1.GetMoves()
-B1.GetMoves()
 print("----------")
 print("%d"%(ChessPiece.stepsBetween(N1.currentPoint, K2.currentPoint)))
 print("%d"%(ChessPiece.stepsBetween(K1.currentPoint, K2.currentPoint)))
+'''
+print("----------")
+#start the computation
+#ChessPiece.calculateBestMove(B1,N1,K1,K2,strategy=moveAway)
+ChessPiece.calculateBestMove(B1,N1,K1,K2,strategy=moveToward)
+print(Board1.recommendedMoves)
+
+
+
