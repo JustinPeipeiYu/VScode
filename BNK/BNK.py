@@ -8,21 +8,25 @@ max = 8
 knight = "knight"
 bishop = "bishop"
 king = "king"
+yours = "your"
+theirs = "their"
 ColumnLetters = "abcdefgh"
 letterDictionary = {}#static dictionary variable that stores map of column letters to column numbers
 
 class ChessPiece:
-    def __init__(self, pieceName):
-        self.PieceName = pieceName
-        self.currentPoint = self.getInput(pieceName)
+    def __init__(self, pieceName, owner):
+        self.pieceName = pieceName
+        self.owner = owner
+        self.currentPoint = self.getInput()
         self.validMoves = []
 
-    def getInput(self,pieceName):#uses the piece name for the prompt. Asks for a position ie.a1 and returns corresponding coordinate ie.[1,1]
+    def getInput(self):
+
         repeat = True
         
         while (repeat==True):
-            #get user input
-            entry = input("What square is your %s on (ie. a1)? \n"%(pieceName)).rstrip().lstrip().lower() 
+            entry = input("What square is %s %s on (ie. a1)? \n"%(self.owner, self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
+            
             repeat = False #switch repeat to on when a condition fails
 
             if (len(entry)!=2): #condition 1: entry is not two characters long
@@ -63,8 +67,8 @@ class ChessPiece:
             return False
     
 class King(ChessPiece):
-    def __init__(self):
-        ChessPiece.__init__(self, king)
+    def __init__(self, owner):
+        ChessPiece.__init__(self, king, owner)
         self.GetValidMoves()
 
     def GetValidMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
@@ -76,8 +80,8 @@ class King(ChessPiece):
         self.validMoves.remove(self.currentPoint)#remove the center square (not a move)
 
 class Knight(ChessPiece):
-    def __init__(self):
-        ChessPiece.__init__(self, knight)
+    def __init__(self, owner):
+        ChessPiece.__init__(self, knight, owner)
         self.GetValidMoves()
     
     def GetValidMoves(self):#to get all L shape moves, simultaneously pair 2 steps horizontally with 1 step vertically (or vice versa)
@@ -93,8 +97,8 @@ class Knight(ChessPiece):
                     self.validMoves.append(newPoint)
         
 class Bishop(ChessPiece):
-    def __init__(self):
-        ChessPiece.__init__(self, bishop)
+    def __init__(self, owner):
+        ChessPiece.__init__(self, bishop, owner)
         self.GetValidMoves()
     
     def GetValidMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
@@ -102,7 +106,6 @@ class Bishop(ChessPiece):
         self.quadrantDiagonal(-1,1)#quadrant 2
         self.quadrantDiagonal(-1,-1)#quadrant 3
         self.quadrantDiagonal(1,-1)#qudrant 4
-
 
     def quadrantDiagonal(self, x, y):
         onboard = True
@@ -122,9 +125,10 @@ for c in ColumnLetters:
     letterDictionary[c] = i
     i+=1
 
-K = King()
-N = Knight()
-B = Bishop()
+K1 = King(yours)
+N1 = Knight(yours)
+B1 = Bishop(yours)
+K2 = King(theirs)
 #print(K.convertToName(K.currentPoint))
 #print(N.convertToName(N.currentPoint))
 #print(B.convertToName(B.currentPoint))
