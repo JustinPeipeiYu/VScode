@@ -2,7 +2,7 @@
 #August 5, 2024
 #BNK: a program to checkmate with bishop, knight, and king
 
-
+#static variables that all classes can use
 min = 1
 max = 8
 knight = "knight"
@@ -11,14 +11,25 @@ king = "king"
 yours = "your"
 theirs = "their"
 ColumnLetters = "abcdefgh"
-letterDictionary = {}#static dictionary variable that stores map of column letters to column numbers
+letterDictionary = {}
+
+class Board:
+    def __init__(self):
+        self.points = []
+    
+    def update(self, point, remove): #update the positions of all pieces
+        if (remove):
+            self.points.remove(point)
+        else:
+            self.points.append(point)
 
 class ChessPiece:
-    def __init__(self, pieceName, owner):
+    def __init__(self, pieceName, owner, board):
         self.pieceName = pieceName
         self.owner = owner
         self.currentPoint = self.getInput()
         self.validMoves = []
+        board.update(self.currentPoint, remove=False)
 
     def getInput(self):
 
@@ -67,8 +78,8 @@ class ChessPiece:
             return False
     
 class King(ChessPiece):
-    def __init__(self, owner):
-        ChessPiece.__init__(self, king, owner)
+    def __init__(self, owner, board):
+        ChessPiece.__init__(self, king, owner, board)
         self.GetMoves()
 
     def GetMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
@@ -80,8 +91,8 @@ class King(ChessPiece):
         self.validMoves.remove(self.currentPoint)#remove the center square (not a move)
 
 class Knight(ChessPiece):
-    def __init__(self, owner):
-        ChessPiece.__init__(self, knight, owner)
+    def __init__(self, owner, board):
+        ChessPiece.__init__(self, knight, owner, board)
         self.GetMoves()
     
     def GetMoves(self):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
@@ -99,8 +110,8 @@ class Knight(ChessPiece):
                     self.validMoves.append(newPoint)
 
 class Bishop(ChessPiece):
-    def __init__(self, owner):
-        ChessPiece.__init__(self, bishop, owner)
+    def __init__(self, owner, board):
+        ChessPiece.__init__(self, bishop, owner, board)
         self.GetMoves()
     
     def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
@@ -127,19 +138,23 @@ for c in ColumnLetters:
     letterDictionary[c] = i
     i+=1
 
-K1 = King(yours)
-N1 = Knight(yours)
-B1 = Bishop(yours)
-K2 = King(theirs)
+Board1 = Board()
+K1 = King(yours, Board1)
+N1 = Knight(yours, Board1)
+B1 = Bishop(yours, Board1)
+K2 = King(theirs, Board1)
 #print(K1.convertToName(K1.currentPoint))
 #print(N1.convertToName(N.currentPoint))
 #print(B1.convertToName(B.currentPoint))
 #print(K2.convertToName(K2.currentPoint))
-print("----------")
+#print("----------")
 #print(K1.validMoves)
-print(N1.validMoves)
+#print(N1.validMoves)
 #print(B1.validMoves)
 #print(K2.validMoves)
+#print("----------")
+print(Board1.points)
+#print("----------")
 
 
 
