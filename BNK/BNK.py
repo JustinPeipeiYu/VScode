@@ -1,6 +1,6 @@
 #Justin Yu
 #August 5, 2024
-#BNK: a fool-proof way to checkmate with bishop, knight, and king
+#BNK: a fool-proof way to checkmate with bishop, knight, and king (the hardest endgame to execute).
 
 #static variables that all classes can use
 min = 1
@@ -82,6 +82,16 @@ class ChessPiece:
             if point in self.validMoves:
                 self.validMoves.remove(point)
     
+    def stepsBetween(point1, point2):#calculates the minimum number of steps between two points moving 1 square at a time
+        dx = abs(point1[0]-point2[0])
+        dy = abs(point1[1] - point2[1])
+        #the minimum is always one less than the maximum distance along an axis
+        if (dx >= dy):
+            return dx - 1
+        else:
+            return dy - 1
+
+
 class King(ChessPiece):
     def __init__(self, owner):
         ChessPiece.__init__(self, king, owner)
@@ -143,19 +153,20 @@ for c in ColumnLetters:
     letterDictionary[c] = i
     i+=1
 
+
 Board1 = Board()
 K1 = King(yours)
 N1 = Knight(yours)
 B1 = Bishop(yours)
 K2 = King(theirs)
-#print(K1.convertToName(K1.currentPoint))
-#print(N1.convertToName(N.currentPoint))
-#print(B1.convertToName(B.currentPoint))
-#print(K2.convertToName(K2.currentPoint))
-K1.GetMoves()
-K2.GetMoves()
-N1.GetMoves()
-B1.GetMoves()
+#Debugging
+'''
+print(K1.convertToName(K1.currentPoint))
+print(N1.convertToName(N.currentPoint))
+print(B1.convertToName(B.currentPoint))
+print(K2.convertToName(K2.currentPoint))
+print("----------")
+
 print("----------")
 print("Your king: ")
 print(K1.validMoves)
@@ -167,4 +178,12 @@ print("Their king")
 print(K2.validMoves)
 print("----------")
 #print(Board1.points)
-#print("----------")
+print("----------")
+'''
+K1.GetMoves()
+K2.GetMoves()
+N1.GetMoves()
+B1.GetMoves()
+print("----------")
+print("%d"%(ChessPiece.stepsBetween(N1.currentPoint, K2.currentPoint)))
+print("%d"%(ChessPiece.stepsBetween(K1.currentPoint, K2.currentPoint)))
