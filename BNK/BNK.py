@@ -69,9 +69,9 @@ class ChessPiece:
 class King(ChessPiece):
     def __init__(self, owner):
         ChessPiece.__init__(self, king, owner)
-        self.GetValidMoves()
+        self.GetMoves()
 
-    def GetValidMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
+    def GetMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
         for i in range(-1,2):
             for j in range(-1,2):
                 newPoint = [self.currentPoint[0]+i, self.currentPoint[1]+j]
@@ -82,26 +82,28 @@ class King(ChessPiece):
 class Knight(ChessPiece):
     def __init__(self, owner):
         ChessPiece.__init__(self, knight, owner)
-        self.GetValidMoves()
+        self.GetMoves()
     
-    def GetValidMoves(self):#to get all L shape moves, simultaneously pair 2 steps horizontally with 1 step vertically (or vice versa)
-        for i in range(-1,2,2):#1 step horizontally &
-            for j in range(-2,3,4):#2 steps vertically
-                newPoint = [self.currentPoint[0]+i, self.currentPoint[1]+j]
+    def GetMoves(self):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
+        self.Lgroup(verticalTwo=True)
+        self.Lgroup(verticalTwo=False)
+
+    def Lgroup(self, verticalTwo):
+        for i in range(-1,2,2): #i covers 1 step
+            for j in range(-2,3,4): #j covers 2 steps
+                if (verticalTwo): #implement 2 steps vertical and 1 step horizontal or vice versa
+                    newPoint = [self.currentPoint[0]+i, self.currentPoint[1]+j]
+                else:
+                    newPoint = [self.currentPoint[0]+j, self.currentPoint[1]+i]
                 if not self.offBoard(newPoint): #check the next move is still within boundaries of board
                     self.validMoves.append(newPoint)
-        for i in range(-2,3,4):#2 steps horizontally & 
-            for j in range(-1,2,2): #1 step vertically
-                newPoint = [self.currentPoint[0]+i, self.currentPoint[1]+j]
-                if not self.offBoard(newPoint): #check the next move is still within boundaries of board
-                    self.validMoves.append(newPoint)
-        
+
 class Bishop(ChessPiece):
     def __init__(self, owner):
         ChessPiece.__init__(self, bishop, owner)
-        self.GetValidMoves()
+        self.GetMoves()
     
-    def GetValidMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
+    def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
         self.quadrantDiagonal(1,1)#quadrant 1
         self.quadrantDiagonal(-1,1)#quadrant 2
         self.quadrantDiagonal(-1,-1)#quadrant 3
@@ -129,13 +131,15 @@ K1 = King(yours)
 N1 = Knight(yours)
 B1 = Bishop(yours)
 K2 = King(theirs)
-#print(K.convertToName(K.currentPoint))
-#print(N.convertToName(N.currentPoint))
-#print(B.convertToName(B.currentPoint))
+#print(K1.convertToName(K1.currentPoint))
+#print(N1.convertToName(N.currentPoint))
+#print(B1.convertToName(B.currentPoint))
+#print(K2.convertToName(K2.currentPoint))
 print("----------")
-#print(K.validMoves)
-#print(N.validMoves)
-#print(B.validMoves)
+#print(K1.validMoves)
+print(N1.validMoves)
+#print(B1.validMoves)
+#print(K2.validMoves)
 
 
 
