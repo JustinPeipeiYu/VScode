@@ -20,13 +20,19 @@ end = "end"
 class Board:
     def __init__(self):
         self.points = []
-        self.recommendedMoves = {}
+        self.recommendedMoves = {knight:[],bishop:[],king:[]}
     
     def update(self, point, remove): #update the positions of all pieces
         if (remove):
             self.points.remove(point)
         else:
             self.points.append(point)
+
+
+
+
+
+
 
 class ChessPiece:
     def __init__(self, pieceName, owner):
@@ -96,40 +102,54 @@ class ChessPiece:
         else:
             return dy - 1
     
-    def calculateBestMove(b1, n1, k1, k2, strategy):#determines the best move based on positions of the pieces (order: Bishop, Knight, Your King, Their king) and strategy at that moment 
-        if (strategy == moveAway):
-             #move away for bishop
-            b1.GetMoves()
-            ChessPiece.farthestMoveAway(b1, k2)
-             #move away for knight
-            n1.GetMoves()
-            ChessPiece.farthestMoveAway(n1, k2)
+    def calculateBestMove(strategy):#determines the best move based on positions of the pieces (order: Bishop, Knight, Your King, Their king) and strategy at that moment 
+        B1.GetMoves()
+        N1.GetMoves()
+        if (strategy==moveAway):
+            if (ChessPiece.stepsBetween(B1.currentPoint, K2.currentPoint) == 0 and ChessPiece.stepsBetween(B1.currentPoint, K1.currentPoint) != 0):#move away for bishop if it is about to be captured
+                ChessPiece.farthestMoveAway(B1, K2.currentPoint)#move away for bishop
+            elif (ChessPiece.stepsBetween(N1.currentPoint, K2.currentPoint) == 0 and ChessPiece.stepsBetween(N1.currentPoint, K1.currentPoint) != 0): #elif because either bishop or night but not both (automatic lose game)
+                ChessPiece.farthestMoveAway(N1, K2.currentPoint)#move away for knight
         elif (strategy==moveToward):
-            #move toward for bishop
-            b1.GetMoves()
-            ChessPiece.closestMoveTo(b1,k1)
-            #move toward for knight
-            n1.GetMoves()
-            ChessPiece.closestMoveTo(n1,k1)
+            ChessPiece.closestMoveTo(B1,K1.currentPoint)#move toward king for bishop
+            ChessPiece.closestMoveTo(N1,K1.currentPoint)#move toward king for knight
+        ChessPiece.removeDuplicates()    
 
-    def closestMoveTo(piece1, piece2):#selects from the piece 1's valid moves the closest to piece 2
+    def closestMoveTo(piece1, point2):#selects from the piece 1's valid moves the closest square to point 2
         closest = 100
         for move in piece1.validMoves:
-            dist = ChessPiece.stepsBetween(move, piece2.currentPoint) #find the steps between piece 2 and all the valid moves for piece 1
+            dist = ChessPiece.stepsBetween(move, point2) #find the steps between piece 2 and all the valid moves for piece 1
             if (dist < closest):
-                closest = dist #determine index of the closest option
-                i = piece1.validMoves.index(move)
-        Board1.recommendedMoves[piece1.pieceName] = piece1.validMoves[i]#use that option as the recommended
-            
-    def farthestMoveAway(piece1, piece2):#selects from piece 1's valid moves the farthest from piece 2
-        i = -1
-        farthest = 0
+                closest = dist #finds closest distance reachable by next move to another piece
         for move in piece1.validMoves:
-            dist = ChessPiece.stepsBetween(move, piece2.currentPoint)
+            dist = ChessPiece.stepsBetween(move, point2) 
+            if (dist == closest):  #filters for all next move squares that have closest distance
+                Board1.recommendedMoves[piece1.pieceName].append(move)#use that option as the recommended
+            
+    def farthestMoveAway(piece1, point2):#selects from piece 1's valid moves the farthest from point 2
+        farthest = 0
+        for move in piece1.validMoves:#finds farthest distance reachable by next move to another piece
+            dist = ChessPiece.stepsBetween(move, point2)
             if (dist > farthest):
-                farthest = dist #determine index of the closest option
-                i = piece1.validMoves.index(move)
-        Board1.recommendedMoves[piece1.pieceName] = piece1.validMoves[i]
+                farthest = dist 
+        for move in piece1.validMoves:#filters for all next move squares that have farthest distance
+            dist = ChessPiece.stepsBetween(move, point2)
+            if (dist == farthest): 
+                Board1.recommendedMoves[piece1.pieceName].append(move)
+    
+    def removeDuplicates():
+        for piece in Board1.recommendedMoves:
+            nonDuplicates = []
+            for move in Board1.recommendedMoves[piece]:
+                if (move not in nonDuplicates):
+                    nonDuplicates.append(move)
+            Board1.recommendedMoves[piece] = nonDuplicates
+
+
+
+
+
+
 
 class King(ChessPiece):
     def __init__(self, owner):
@@ -143,6 +163,12 @@ class King(ChessPiece):
                         self.validMoves.append(newPoint)
         self.validMoves.remove(self.currentPoint)#remove the center square (not a move)
         self.removeOccupied(Board1.points)
+
+
+
+
+
+
 
 class Knight(ChessPiece):
     def __init__(self, owner):
@@ -163,28 +189,41 @@ class Knight(ChessPiece):
                 if not self.offBoard(newPoint): #check the next move is still within boundaries of board
                     self.validMoves.append(newPoint)
 
+
+
+
+
+
+
 class Bishop(ChessPiece):
     def __init__(self, owner):
         ChessPiece.__init__(self, bishop, owner)
     
     def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
-        self.quadrantDiagonal(1,1)#quadrant 1
-        self.quadrantDiagonal(-1,1)#quadrant 2
-        self.quadrantDiagonal(-1,-1)#quadrant 3
-        self.quadrantDiagonal(1,-1)#qudrant 4
-        self.removeOccupied(Board1.points)
+        self.quadrantDiagonal(1,1, K1.currentPoint, N1.currentPoint)#quadrant 1, x=1,y=1
+        self.quadrantDiagonal(-1,1, K1.currentPoint, N1.currentPoint)#quadrant 2, x=-1, y=1
+        self.quadrantDiagonal(-1,-1, K1.currentPoint, N1.currentPoint)#quadrant 3, x=-1, y=-1
+        self.quadrantDiagonal(1,-1, K1.currentPoint, N1.currentPoint)#qudrant 4, x=1, y=-1
 
-    def quadrantDiagonal(self, x, y):
-        onboard = True
+    def quadrantDiagonal(self, x, y, point1, point2): #x & y specify the quadrant we are computing for
+        valid = True
         i = 1
-        while(onboard):
+        while(valid):
             newPoint = [self.currentPoint[0]+ x * i, self.currentPoint[1]+ y * i]
-            if not self.offBoard(newPoint): #check the next move is still within boundaries of board
-                self.validMoves.append(newPoint)
-                i+=1
+            if not self.offBoard(newPoint): #check the next move is still within boundaries of board, 
+                if (ChessPiece.stepsBetween(newPoint, point1)!=-1 and ChessPiece.stepsBetween(newPoint, point2)!=-1): #and is not blocked by one of its own pieces
+                    self.validMoves.append(newPoint)
+                    i+=1
+                else:
+                    valid = False
             else:
-                onboard = False
-        
+                valid = False
+
+
+
+
+
+
 #Main Program
 #populate the dictionary for easy future mapping
 i = 1
@@ -228,8 +267,8 @@ print("%d"%(ChessPiece.stepsBetween(K1.currentPoint, K2.currentPoint)))
 '''
 print("----------")
 #start the computation
-#ChessPiece.calculateBestMove(B1,N1,K1,K2,strategy=moveAway)
-ChessPiece.calculateBestMove(B1,N1,K1,K2,strategy=moveToward)
+ChessPiece.calculateBestMove(strategy=moveAway)#calculate best move to move away from their king
+ChessPiece.calculateBestMove(strategy=moveToward)#calculate the best move to move toward your king
 print(Board1.recommendedMoves)
 
 
