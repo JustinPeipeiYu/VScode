@@ -5,9 +5,8 @@
 #general variables that all classes can use
 knight = "knight"
 bishop = "bishop"
-king = "king"
-yours = "your"
-theirs = "their"
+yourKing = "your king"
+theirKing = "their king"
 columnLetters = "abcdefgh"
 letterDictionary = {}
 #variables for main program strategy 
@@ -17,17 +16,16 @@ defendKnight = 3
 
 class Board:
     def __init__(self):
-        self.points = []
-        self.recommendedMoves = {knight:[],bishop:[],king:[]}
+        self.positions = {}
+        self.recommendedMoves = {knight:[],bishop:[],yourKing:[],theirKing:[]}
         self.min = 1
         self.max  = 8
     
-    def updateBoard(self, listOfPieces, remove): #update the positions of all pieces
+    def updateBoard(self, listOfPieces): #update the positions of all pieces on board, and make sure each piece has a copy of updated positions
         for piece in listOfPieces:
-            if (remove):
-                self.points.remove(piece.currentPoint)
-            else:
-                self.points.append(piece.currentPoint)
+            self.positions[piece.pieceName] = piece.currentPoint
+            piece.Board1 = self
+        return listOfPieces
 
 
     def offBoard(self, point):#returns true if the point is off the board, returns false otherwise
@@ -61,9 +59,8 @@ class Board:
 
 
 class ChessPiece:
-    def __init__(self, pieceName, owner, Board1):
+    def __init__(self, pieceName, Board1):
         self.pieceName = pieceName
-        self.owner = owner
         self.Board1 = Board1
         self.currentPoint = self.getInput()
         self.validMoves = []
@@ -73,7 +70,7 @@ class ChessPiece:
         repeat = True
         
         while (repeat==True):
-            entry = input("What square is %s %s on (ie. a1)? \n"%(self.owner, self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
+            entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
             
             repeat = False #switch repeat to on when a condition fails
 
@@ -98,26 +95,24 @@ class ChessPiece:
         return Board1.convertToPoint(entry)
     
         
-    def removeOccupied(self, points):#removes occupied squares from possible moves
-        for point in points:
-            if point in self.validMoves:
-                self.validMoves.remove(point)
+    def removeOccupied(self, positions):#removes occupied squares from possible moves
+        for p in positions:
+            if positions[self.pieceName] in self.validMoves:
+                self.validMoves.remove(positions[self.pieceName])
     
     
     def calculateBestMove(self, strategy):#determines the best move based on positions of the pieces (order: Bishop, Knight, Your King, Their king) and strategy at that moment 
         B1.GetMoves()
         N1.GetMoves()
         if (strategy==moveAway):
-            if (self.Board1.stepsBetween(B1.currentPoint, K2.currentPoint) == 0 and self.Board1.stepsBetween(B1.currentPoint, K1.currentPoint) != 0):#move away for bishop if it is about to be captured
-                self.farthestMoveAway(B1, K2.currentPoint)#move away for bishop
-            elif (self.Board1.stepsBetween(N1.currentPoint, K2.currentPoint) == 0 and self.Board1.stepsBetween(N1.currentPoint, K1.currentPoint) != 0): #elif because either bishop or night but not both (automatic lose game)
-                self.farthestMoveAway(N1, K2.currentPoint)#move away for knight
+            self.farthestMoveAway(B1, K2.currentPoint)#move away for bishop
+            self.farthestMoveAway(N1, K2.currentPoint)#move away for knight
         elif (strategy==moveToward):
             self.closestMoveTo(B1,K1.currentPoint)#move toward king for bishop
             self.closestMoveTo(N1,K1.currentPoint)#move toward king for knight
         self.removeDuplicates()    
 
-    def closestMoveTo(self,piece1, point2):#selects from the piece 1's valid moves the closest square to point 2
+    def closestMoveTo(self, piece1, point2):#selects from the piece 1's valid moves the closest square to point 2
         closest = 100
         for move in piece1.validMoves:
             dist = self.Board1.stepsBetween(move, point2) #find the steps between piece 2 and all the valid moves for piece 1
@@ -139,7 +134,6 @@ class ChessPiece:
             if (dist == farthest): 
                 Board1.recommendedMoves[piece1.pieceName].append(move)
     
-    
     def removeDuplicates(self):
         for piece in Board1.recommendedMoves:
             nonDuplicates = []
@@ -155,8 +149,8 @@ class ChessPiece:
 
 
 class King(ChessPiece):
-    def __init__(self, owner, Board1):
-        ChessPiece.__init__(self, king, owner, Board1)
+    def __init__(self, Board1, name):
+        ChessPiece.__init__(self, name, Board1)
 
     def GetMoves(self):#to get all king's moves, place the king in the center of a 3x3 square
         for i in range(-1,2):
@@ -165,7 +159,6 @@ class King(ChessPiece):
                 if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board
                         self.validMoves.append(newPoint)
         self.validMoves.remove(self.currentPoint)#remove the center square (not a move)
-        self.removeOccupied(Board1.points)
 
 
 
@@ -174,18 +167,18 @@ class King(ChessPiece):
 
 
 class Knight(ChessPiece):
-    def __init__(self, owner, Board1):
-        ChessPiece.__init__(self, knight, owner, Board1)
+    def __init__(self, Board1):
+        ChessPiece.__init__(self, knight, Board1)
     
     def GetMoves(self):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
-        self.Lgroup(verticalTwo=True)
-        self.Lgroup(verticalTwo=False)
-        self.removeOccupied(Board1.points)
+        self.Lgroup(v2h1=True) #2 steps vertical, 1 step horizontal
+        self.Lgroup(v2h1=False) #1 step vertical, 2 steps horizontal
+        self.removeOccupied(Board1.positions)
 
-    def Lgroup(self, verticalTwo):
+    def Lgroup(self, v2h1):
         for i in range(-1,2,2): #i covers 1 step
             for j in range(-2,3,4): #j covers 2 steps
-                if (verticalTwo): #implement 2 steps vertical and 1 step horizontal or vice versa
+                if (v2h1): #implement 2 steps vertical and 1 step horizontal or vice versa
                     newPoint = [self.currentPoint[0]+i, self.currentPoint[1]+j]
                 else:
                     newPoint = [self.currentPoint[0]+j, self.currentPoint[1]+i]
@@ -193,19 +186,19 @@ class Knight(ChessPiece):
                     self.validMoves.append(newPoint)
 
     def knightTrapped(self):#checks if all recommended moves for a knight result in capture, if so optimizes the recommendations by moving to a defended square
-        escape = False
-        for move in self.Board1.recommendedMoves[knight]:
-            if (self.Board1.stepsBetween(move, self.currentPoint) > 0):
-                escape = True
-        return escape
+        trapped = True
+        for move in self.validMoves:
+            if (self.Board1.stepsBetween(move, K2.currentPoint) > 0):
+                trapped = False
+        return trapped
 
 
 
 
 
 class Bishop(ChessPiece):
-    def __init__(self, owner, Board1):
-        ChessPiece.__init__(self, bishop, owner, Board1)
+    def __init__(self, Board1):
+        ChessPiece.__init__(self, bishop, Board1)
     
     def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
         self.quadrantDiagonal(1,1, K1.currentPoint, N1.currentPoint)#quadrant 1, x=1,y=1
@@ -241,11 +234,11 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 
 print("Please start with your move to play\n")
 Board1 = Board() #create board
-B1 = Bishop(yours, Board1)
-N1 = Knight(yours, Board1)
-K1 = King(yours, Board1) 
-K2 = King(theirs, Board1) 
-Board1.updateBoard([B1,N1,K1,K2], remove=False) #synchronize board with the pieces
+B1 = Bishop(Board1)
+N1 = Knight(Board1)
+K1 = King(Board1, yourKing) 
+K2 = King(Board1, theirKing) 
+B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) #synchronize board with the pieces
 
 #Debugging
 '''
@@ -280,6 +273,7 @@ N1.calculateBestMove(strategy=moveAway)#calculate best move to move away from th
 #ChessPiece.calculateBestMove(strategy=moveToward)#calculate the best move to move toward your king
 print(Board1.recommendedMoves)
 print(N1.knightTrapped())
+print(N1.Board1.positions)
 
 
 
