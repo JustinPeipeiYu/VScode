@@ -2,28 +2,29 @@
 #August 5, 2024
 #BNK: a fool-proof way to checkmate with bishop, knight, and king (the hardest endgame to execute).
 
-#general variables that all classes can use
+#global program variables that all classes can use
 knight = "knight"
 bishop = "bishop"
 yourKing = "your king"
 theirKing = "their king"
 columnLetters = "abcdefgh"
-letterDictionary = {}
-#variables for main program strategy 
+letterDictionary = {} 
 moveAway = 1
 moveToward = 2
 defendKnight = 3
+gameOver = False
+win = False
 
 class Board:
     def __init__(self):
-        self.positions = {}
+        self.pieces = {}
         self.recommendedMoves = {knight:[],bishop:[],yourKing:[],theirKing:[]}
         self.min = 1
         self.max  = 8
     
     def updateBoard(self, listOfPieces): #update the positions of all pieces on board, and make sure each piece has a copy of updated positions
         for piece in listOfPieces:
-            self.positions[piece.pieceName] = piece.currentPoint
+            self.pieces[piece.pieceName] = piece
             piece.Board1 = self
         return listOfPieces
 
@@ -53,6 +54,30 @@ class Board:
         for l in letterDictionary:
             if (letterDictionary[l]==point[0]):
                 return (l + str(point[1]))
+            
+    def knightTrapped(self):#checks if all recommended moves for a knight result in capture, if so optimizes the recommendations by moving to a defended square
+        trapped = True
+        for move in self.recommendedMoves[knight]:
+            if (self.stepsBetween(move, K2.currentPoint) > 0):
+                trapped = False
+        return trapped
+    
+    def lightOrDark(self, point):#determines whether point falls on light square or dark square
+        light = True
+        if ((point[0] + point[1]) % 2 == 0): #ie. bishop is on dark square if on [1,1] --> (1 + 1) % 2 == 0
+            light = False
+        return False
+
+    def saveKnight(self): #returns true if the knight can be saved, returns false if it is destined to be captured resulting in draw
+        if (self.Board1.lightOrDark(self.currentPoint)==self.Board1.lightOfDark(self.pieces[bishop])):#they are on same color square so bishop can move to defend     
+            for bMove in self.pieces[bishop].validMoves:
+                pass
+        else: #they are on different color square so knight can move to a point defended by bishop
+            for bMove in self.pieces[bishop].validMoves:
+                if bMove == self.pieces[Knight].currentPoint:
+                    self.recommendedMoves[knight] = bMove
+                    return True
+            
 
 
 
@@ -95,21 +120,21 @@ class ChessPiece:
         return Board1.convertToPoint(entry)
     
         
-    def removeOccupied(self, positions):#removes occupied squares from possible moves
-        for p in positions:
-            if positions[self.pieceName] in self.validMoves:
-                self.validMoves.remove(positions[self.pieceName])
+    def removeOccupied(self, pieces):#removes squares occupied from the pieces in the dictionary from the possible valid moves  
+        for p in pieces:
+            if pieces[p].currentPoint in self.validMoves:
+                self.validMoves.remove(p)
     
     
     def calculateBestMove(self, strategy):#determines the best move based on positions of the pieces (order: Bishop, Knight, Your King, Their king) and strategy at that moment 
         B1.GetMoves()
         N1.GetMoves()
         if (strategy==moveAway):
-            self.farthestMoveAway(B1, K2.currentPoint)#move away for bishop
-            self.farthestMoveAway(N1, K2.currentPoint)#move away for knight
+            self.farthestMoveAway(self, K2.currentPoint)#move away for bishop/knight
         elif (strategy==moveToward):
-            self.closestMoveTo(B1,K1.currentPoint)#move toward king for bishop
-            self.closestMoveTo(N1,K1.currentPoint)#move toward king for knight
+            self.closestMoveTo(self,K1.currentPoint)#move toward king for bishop/knight
+        elif (strategy==defendKnight):
+            self.Board1.saveKnight()
         self.removeDuplicates()    
 
     def closestMoveTo(self, piece1, point2):#selects from the piece 1's valid moves the closest square to point 2
@@ -133,15 +158,14 @@ class ChessPiece:
             dist = self.Board1.stepsBetween(move, point2)
             if (dist == farthest): 
                 Board1.recommendedMoves[piece1.pieceName].append(move)
-    
-    def removeDuplicates(self):
+
+    def removeDuplicates(self):#removes duplicate points in recommended moves
         for piece in Board1.recommendedMoves:
             nonDuplicates = []
             for move in Board1.recommendedMoves[piece]:
                 if (move not in nonDuplicates):
                     nonDuplicates.append(move)
             Board1.recommendedMoves[piece] = nonDuplicates
-
 
 
 
@@ -173,7 +197,7 @@ class Knight(ChessPiece):
     def GetMoves(self):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
         self.Lgroup(v2h1=True) #2 steps vertical, 1 step horizontal
         self.Lgroup(v2h1=False) #1 step vertical, 2 steps horizontal
-        self.removeOccupied(Board1.positions)
+        self.removeOccupied(self.Board1.pieces)
 
     def Lgroup(self, v2h1):
         for i in range(-1,2,2): #i covers 1 step
@@ -184,14 +208,8 @@ class Knight(ChessPiece):
                     newPoint = [self.currentPoint[0]+j, self.currentPoint[1]+i]
                 if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board
                     self.validMoves.append(newPoint)
-
-    def knightTrapped(self):#checks if all recommended moves for a knight result in capture, if so optimizes the recommendations by moving to a defended square
-        trapped = True
-        for move in self.validMoves:
-            if (self.Board1.stepsBetween(move, K2.currentPoint) > 0):
-                trapped = False
-        return trapped
-
+    
+                
 
 
 
@@ -201,24 +219,23 @@ class Bishop(ChessPiece):
         ChessPiece.__init__(self, bishop, Board1)
     
     def GetMoves(self):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
-        self.quadrantDiagonal(1,1, K1.currentPoint, N1.currentPoint)#quadrant 1, x=1,y=1
-        self.quadrantDiagonal(-1,1, K1.currentPoint, N1.currentPoint)#quadrant 2, x=-1, y=1
-        self.quadrantDiagonal(-1,-1, K1.currentPoint, N1.currentPoint)#quadrant 3, x=-1, y=-1
-        self.quadrantDiagonal(1,-1, K1.currentPoint, N1.currentPoint)#qudrant 4, x=1, y=-1
+        self.quadrantDiagonal(self.Board1.pieces[yourKing].currentPoint, self.Board1.pieces[knight].currentPoint)
 
-    def quadrantDiagonal(self, x, y, point1, point2): #x & y specify the quadrant we are computing for
-        valid = True
-        i = 1
-        while(valid):
-            newPoint = [self.currentPoint[0]+ x * i, self.currentPoint[1]+ y * i]
-            if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board, 
-                if (self.Board1.stepsBetween(newPoint, point1)!=-1 and self.Board1.stepsBetween(newPoint, point2)!=-1): #and is not blocked by one of its own pieces
-                    self.validMoves.append(newPoint)
-                    i+=1
-                else:
-                    valid = False
-            else:
-                valid = False
+    def quadrantDiagonal(self,point1, point2): #x & y specify the quadrant we are computing for
+        for x in range(-1,2,2):#x=-1,1
+            for y in range(-1,2,2):#y=-1,1
+                valid = True
+                i = 1
+                while(valid):
+                    newPoint = [self.currentPoint[0]+ x * i, self.currentPoint[1]+ y * i] #to get new point, add/subtract increments of 1 to x and y repeatedly until you bump into another piece or fall off board ie. x + 1 * i, y - 1 * i
+                    if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board, 
+                        if (self.Board1.stepsBetween(newPoint, point1)!=-1 and self.Board1.stepsBetween(newPoint, point2)!=-1): #and is not blocked by one of its own pieces
+                            self.validMoves.append(newPoint)
+                            i+=1
+                        else:
+                            valid = False
+                    else:
+                        valid = False
 
 
 
@@ -226,7 +243,6 @@ class Bishop(ChessPiece):
 
 
 #Main Program
-
 i = 1
 for c in columnLetters:#populate the dictionary that maps letter columns to number values
     letterDictionary[c] = i
@@ -272,8 +288,11 @@ print("----------")
 N1.calculateBestMove(strategy=moveAway)#calculate best move to move away from their king
 #ChessPiece.calculateBestMove(strategy=moveToward)#calculate the best move to move toward your king
 print(Board1.recommendedMoves)
-print(N1.knightTrapped())
-print(N1.Board1.positions)
+print("Knight trapped: ")
+print(Board1.knightTrapped())
+print("Bishop on light: ")
+print(Board1.lightOrDark(B1.currentPoint))
+#print(N1.Board1.positions)
 
 
 
