@@ -102,9 +102,9 @@ class Board:
     
     def lightOrDark(self, point):#determines whether point falls on light square or dark square
         light = True
-        if ((point[0] + point[1]) % 2 == 0): #ie. bishop is on dark square if on [1,1] --> (1 + 1) % 2 == 0
+        if ((point[0] + point[1]) % 2 == 0): #ie. bishop is on dark square if on sum of x and y are even ie. [1,1] --> (1 + 1) % 2 == 0
             light = False
-        return False
+        return light
 
         
 # functions unique to a chess piece, parent of king, knight, bishop          
@@ -251,7 +251,7 @@ class Bishop(ChessPiece):
                 while(valid):
                     newPoint = [point[0]+ x * i, point[1]+ y * i] #to get new point, add/subtract increments of 1 to x and y repeatedly until you bump into another piece, land adjacent to their king, or fall off board ie. x + 1 * i, y - 1 * i,  i = 1,2,3...
                     if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board, 
-                        if ((newPoint != self.Board1.pieces[yourKing].currentPoint) and (newPoint != self.Board1.pieces[bishop].currentPoint)): #and is not on one of its own pieces
+                        if ((newPoint != self.Board1.pieces[yourKing].currentPoint) and (newPoint != self.Board1.pieces[knight].currentPoint)): #and is not on one of its own pieces
                             validMoves.append(newPoint)
                             i+=1
                         else:
