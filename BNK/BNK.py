@@ -1,6 +1,9 @@
 #Justin Yu
 #August 7, 2024
-#BNK: the start of a program that can checkmate with bishop, knight, and king (the most technical endgame to execute successfully). So far, this program's purpose is to prevent the draw situation which can occur by trapping the knight in the corner and capturing it. This program instructions provides options for the user to save their knight in such situations and prevent a draw from resulting out of a garaunteed win.
+#BNK: the start of a program that can checkmate with bishop, knight, and king (the most technical endgame to execute successfully). 
+#So far, this program's purpose is to prevent the draw situation which can occur by trapping the knight in the corner and capturing it. 
+# This program instructions provides options for the user to save their knight in such situations and prevent a draw from resulting out 
+# of a garaunteed win.
 
 #global program variables that all classes can use
 knight = "knight"
@@ -81,9 +84,27 @@ class Board:
         k2 = self.pieces[theirKing].currentPoint
         n1 = self.pieces[knight].currentPoint
         b1 = self.pieces[bishop].currentPoint
-        if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is adjacent
+        if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is attacking both knight and bishop
             if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
                 trapped = True
+            if (self.lightOrDark(n1)==self.lightOrDark(b1)):#knight and bishop on same color, potentially they can both be saved            
+                if (self.adjacent(n1,b1)):
+                    pass
+                else:#the knight and bishop are not adjacent and their king is in between them, to save both, must either move knight or move bishop
+                    nOptimized = []#the optimal moves are the ones that save the bishop
+                    bOptimized = []#the optimal move is the one that can save the knight
+                    self.knightTrapped()#get list of recommended moves for knight
+                    for move in self.recommendedMoves[knight]:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
+                        if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.stepsBetween(move,k1)<=1):
+                            nOptimized.append(move)
+                            trapped = False
+                    self.recommendedMoves[knight] = nOptimized
+                    
+                    for move in self.recommendedMoves[bishop]:#the only optimal bishop move is bishop moves 1 diagonal to defend knight, and king defends bishop
+                        if self.adjacent(move, k1):
+                            bOptimized.append(move)
+                            trapped = False
+                    self.recommendedMoves[bishop] = bOptimized
         return trapped
 
 
@@ -197,28 +218,32 @@ class ChessPiece:
         self.removeDuplicates()   
     '''
 
-    def closestMoveTo(self, piece1, point2):#selects from the piece 1's valid moves the closest square to point 2
+    def closestMoveTo(self, moves, point):#selects a piece's closest moves to a point from a list of moves
         closest = 100
-        for move in piece1.validMoves:
-            dist = self.Board1.stepsBetween(move, point2) #find the steps between piece 2 and all the valid moves for piece 1
+        closestMoves = []
+        for move in moves:
+            dist = self.Board1.stepsBetween(move, point) #find the steps between piece 2 and all the valid moves for piece 1
             if (dist < closest):
                 closest = dist #finds closest distance reachable by next move to another piece
-        for move in piece1.validMoves:
-            dist = self.Board1.stepsBetween(move, point2) 
+        for move in moves:
+            dist = self.Board1.stepsBetween(move, point) 
             if (dist == closest):  #filters for all next move squares that have closest distance
-                Board1.recommendedMoves[piece1.pieceName].append(move)#use that option as the recommended
-            
-    def farthestMoveAway(self,piece1, point2):#selects from piece 1's valid moves the farthest from point 2
+                closestMoves.append(move)#use that option as the recommended
+        return closestMoves
+    
+    def farthestMoveAway(self, moves, point):#selects a piece's farthest moves from a point from a list of moves
         farthest = 0
-        for move in piece1.validMoves:#finds farthest distance reachable by next move to another piece
-            dist = self.Board1.stepsBetween(move, point2)
+        farthestMoves = []
+        for move in moves:#finds farthest distance reachable by next move to another piece
+            dist = self.Board1.stepsBetween(move, point)
             if (dist > farthest):
                 farthest = dist 
-        for move in piece1.validMoves:#filters for all next move squares that have farthest distance
-            dist = self.Board1.stepsBetween(move, point2)
+        for move in moves:#filters for all next move squares that have farthest distance
+            dist = self.Board1.stepsBetween(move, point)
             if (dist == farthest): 
-                Board1.recommendedMoves[piece1.pieceName].append(move)
-
+                farthestMoves.append(move)
+        return farthestMoves
+    
 #the functions that are unique to the king
 #includes:
 #king's next move 
@@ -303,7 +328,7 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
     letterDictionary[c] = i
     i+=1
 
-print("Please start with your move to play\n")
+print("Please start with your move to play.")
 #create board and pieces
 Board1 = Board() 
 B1 = Bishop(Board1)
@@ -343,15 +368,25 @@ else:
 '''     
 
 if (Board1.knightBishopTrapped()):
-    print("Both pieces are trapped.")
+    gameOver = True
+    win = False
 else:
-    print("At least one piece is not under attack.")
+    B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
+    print("{0:<10s}{1:<5s}{2:<20s}".format("Piece","","Recommended moves"))#headings
+    print("{0:-<10s}{1:<5s}{2:-<20s}".format("","",""))
+    for piece in Board1.recommendedMoves:
+            allMoves = ""
+            if (len(Board1.recommendedMoves[piece]) != 0):
+                for move in Board1.recommendedMoves[piece]:
+                    allMoves = allMoves + Board1.convertToName(move) + ", "
+                allMoves = allMoves[:-2]
+                print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
 
 if (gameOver):
     if (win):
         print("\nYou won by checkmate.")
     else:
-        print("\nYou are going to lose your knight. The result is a draw by way of insufficient material.")
+        print("\nYou are going to lose a piece. The result is a draw by way of insufficient material.")
 else: 
     print("\nThe game is still in play.")
 
