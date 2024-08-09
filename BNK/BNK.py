@@ -75,6 +75,18 @@ class Board:
         else:
             return True 
 
+    def knightBishopTrapped(self):#check if knight and bishop are under attack
+        trapped = False
+        k1 = self.pieces[yourKing].currentPoint
+        k2 = self.pieces[theirKing].currentPoint
+        n1 = self.pieces[knight].currentPoint
+        b1 = self.pieces[bishop].currentPoint
+        if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is adjacent
+            if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
+                trapped = True
+        return trapped
+
+
     def knightTrapped(self):#check if the knight is under attack, check if it is trapped, recommend moves if it is trapped
         trapped = False
         k1 = self.pieces[yourKing].currentPoint
@@ -310,7 +322,8 @@ B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2])
 # https://lichess.org/editor/8/3K4/8/4N3/3k4/1B6/8/8_w_HAha_-_0_1?color=white 
 # ie. Place your bishop on g2, your knight on h8, your king on d7, and their king on g7
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
-     
+
+'''
 print("{0:-<35s}".format(""))
 
 if (Board1.knightTrapped()):
@@ -327,6 +340,12 @@ else:
                 allMoves = allMoves + Board1.convertToName(move) + ", "
             allMoves = allMoves[:-2]
             print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
+'''     
+
+if (Board1.knightBishopTrapped()):
+    print("Both pieces are trapped.")
+else:
+    print("At least one piece is not under attack.")
 
 if (gameOver):
     if (win):
