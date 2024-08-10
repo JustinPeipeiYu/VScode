@@ -89,34 +89,58 @@ class Board:
         b1 = self.pieces[bishop].currentPoint
         if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is attacking both knight and bishop
             if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
-                trapped = True
-            if (self.lightOrDark(n1)==self.lightOrDark(b1)):#if knight and bishop on same color, potentially they can both be saved            
-                if (self.adjacent(n1,b1)):
-                    if (self.bishopOnEdge(b1)):#bishop is on edge, must move the knight
-                        nOptimized = []
-                        self.knightTrapped()
-                        for move in self.recommendedMoves[knight]:
-                            if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):#if knight's escape move defends bishop and is within 1 step of your king, then that is the only move capable of saving both pieces
-                                nOptimized.append(move)
-                                trapped = False
-                        self.clearAll()#clears the recommended all the moves that defend the knight only
-                        self.recommendedMoves[knight] = nOptimized #add the move that defends the knight and bishop
 
-                else:#the knight and bishop are not adjacent and their king is in between them, to save both, you must either move knight or move bishop
-                    nOptimized = []#the optimal moves are the ones that save the bishop
-                    bOptimized = []#the optimal move is the one that can save the knight
-                    self.knightTrapped()#get list of recommended moves for knight
-                    for move in self.recommendedMoves[knight]:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
-                        if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):
-                            nOptimized.append(move)
-                            trapped = False
-                    self.recommendedMoves[knight] = nOptimized
+                trapped = True
+
+            if (self.lightOrDark(n1)==self.lightOrDark(b1)):#if knight and bishop on same color, potentially they can both be saved
+                     
+                if (self.adjacent(n1,b1)):
+
+                    if (self.bishopOnEdge(b1)):#bishop is on edge, bishop and knight adjacent, must move the knight
+
+                        self.knightTrapped()
+                        trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
+                        
+                    else:#bishop is not on edge, bishop and knight adjacent, move bishop
+                        
+                        self.knightTrapped()
+                        trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
+
+                        trapped = self.bishopDefendKnight(b1, n1, k1, needKing = False)#determine which moves (if any) allow bishop to defend knight
+                
+                else:#the knight and bishop are not adjacent and their king is in between them, to save both, you must either move knight or move bishop with king helping it
                     
-                    for move in self.recommendedMoves[bishop]:#the only optimal bishop move is bishop moves 1 diagonal to defend knight, and king defends bishop
-                        if self.adjacent(move, k1):
+                    self.knightTrapped()#get list of recommended moves for knight
+                    trapped = self.knightDefendBishop(b1,k1)#determines which moves (if any) allow the knight to defend bishop
+
+                    trapped = self.bishopDefendKnight(b1, n1, k1, needKing=True)#determines which moves (if any) allow the bishop to defend knight
+
+        return trapped
+    
+    def bishopDefendKnight(self, b1, n1, k1, needKing):#determine which moves (if any) allow the bishop to defend the knight, may need help of king or may not
+        bOptimized = []
+        trapped = True
+        for move in self.pieces[bishop].getMoves(b1, capture=False):
+            if n1 in self.pieces[bishop].getMoves(move, capture=True):
+                if (not needKing):
+                    bOptimized.append(move)
+                    trapped = False
+                else:
+                    if self.adjacent(move, k1):
                             bOptimized.append(move)
                             trapped = False
-                    self.recommendedMoves[bishop] = bOptimized
+        self.recommendedMoves[bishop] = bOptimized
+        return trapped
+
+    def knightDefendBishop(self, b1, k1):#determine which (if any) moves allow the knight to defend bishop with help of the king
+        trapped = True
+        nOptimized = []
+        for move in self.pieces[knight].validMoves:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
+                if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):
+                        nOptimized.append(move)
+                        trapped = False
+        self.clearAll()#clears the recommended all the moves that defend the knight only
+        self.recommendedMoves[knight] = nOptimized #add the move that defends the knight and bishop
         return trapped
 
 
