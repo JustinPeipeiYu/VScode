@@ -12,9 +12,6 @@ yourKing = "your king"
 theirKing = "their king"
 columnLetters = "abcdefgh"
 letterDictionary = {} 
-moveAway = 1
-moveToward = 2
-defendKnight = 3
 gameOver = False
 win = False
 
@@ -71,6 +68,12 @@ class Board:
             return True
         else:
             return False
+        
+    def withinOneStep(self, point1, point2): #determine if any 2 points are within 1 step
+        if (self.stepsBetween(point1,point2) <= 1):
+            return True
+        else:
+            return False
 
     def oneStepBishopMove(self, point1, point2): #determines if the bishop can get from point 1 to point 2 in 1 step
         if (point1[0]==point2[0] or point1[1]==point2[1]):
@@ -87,15 +90,24 @@ class Board:
         if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is attacking both knight and bishop
             if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
                 trapped = True
-            if (self.lightOrDark(n1)==self.lightOrDark(b1)):#knight and bishop on same color, potentially they can both be saved            
+            if (self.lightOrDark(n1)==self.lightOrDark(b1)):#if knight and bishop on same color, potentially they can both be saved            
                 if (self.adjacent(n1,b1)):
-                    pass
-                else:#the knight and bishop are not adjacent and their king is in between them, to save both, must either move knight or move bishop
+                    if (self.bishopOnEdge(b1)):#bishop is on edge, must move the knight
+                        nOptimized = []
+                        self.knightTrapped()
+                        for move in self.recommendedMoves[knight]:
+                            if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):#if knight's escape move defends bishop and is within 1 step of your king, then that is the only move capable of saving both pieces
+                                nOptimized.append(move)
+                                trapped = False
+                        self.clearAll()#clears the recommended all the moves that defend the knight only
+                        self.recommendedMoves[knight] = nOptimized #add the move that defends the knight and bishop
+
+                else:#the knight and bishop are not adjacent and their king is in between them, to save both, you must either move knight or move bishop
                     nOptimized = []#the optimal moves are the ones that save the bishop
                     bOptimized = []#the optimal move is the one that can save the knight
                     self.knightTrapped()#get list of recommended moves for knight
                     for move in self.recommendedMoves[knight]:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
-                        if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.stepsBetween(move,k1)<=1):
+                        if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):
                             nOptimized.append(move)
                             trapped = False
                     self.recommendedMoves[knight] = nOptimized
@@ -115,13 +127,12 @@ class Board:
         n1 = self.pieces[knight].currentPoint
         b1 = self.pieces[bishop].currentPoint
         if (self.adjacent(k2, n1)):#if the knight is under attack
-            if (not n1 in self.pieces[bishop].getMoves(b1, capture = True) and not n1 in self.pieces[yourKing].getMoves(k1, capture = True)):#if the knight is guarded by the bishop, or the king, it is not trapped
+            if (not (n1 in self.pieces[bishop].getMoves(b1, capture = True) and self.adjacent(n1,k1)) and not n1 in self.pieces[yourKing].getMoves(k1, capture = True)):#if the knight is guarded by the bishop (and not adjacent), or the king is gaurding knight, then it is not trapped
                 trapped = True
                 for move in self.pieces[yourKing].validMoves: 
                     if (self.adjacent(move, n1)):#check if king can move to defend the knight
                         self.recommendedMoves[yourKing].append(move)
                         trapped=False
-
                 for move in self.pieces[knight].validMoves:#if the knight can save itself
                     if (not self.adjacent(move, k2)): #if knight has valid move away from their king, it is not trapped 
                         self.recommendedMoves[knight].append(move)
@@ -140,9 +151,15 @@ class Board:
                         if nMove in self.pieces[bishop].validMoves:
                             self.recommendedMoves[knight].append(nMove)
                             trapped = False
-        self.recommendedMoves = self.removeDuplicates()
+        self.removeDuplicates()
         return trapped
     
+    def bishopOnEdge(self, b1):#determines whether the bishop is trapped on the edge
+        onEdge = False
+        if (b1[0] == self.max or b1[0] == self.min or b1[1] == self.max or b1[1] == self.min):#if any of the bishop's coordinate values are max or min, then the bishop is on the edge
+            onEdge = True
+        return onEdge
+
     def lightOrDark(self, point):#determines whether point falls on light square or dark square
         light = True
         if ((point[0] + point[1]) % 2 == 0): #ie. bishop is on dark square if on sum of x and y are even ie. [1,1] --> (1 + 1) % 2 == 0
@@ -156,8 +173,10 @@ class Board:
                 if (move not in nonDuplicates):
                     nonDuplicates.append(move)
             self.recommendedMoves[piece] = nonDuplicates
-        return self.recommendedMoves
 
+    def clearAll(self):#clears all points in recommended moves dictionary
+        for piece in self.recommendedMoves:
+            self.recommendedMoves[piece] = []
         
 # functions unique to a chess piece, parent of king, knight, bishop          
 # get input recieves the point on the board from when the program starts running
