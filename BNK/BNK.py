@@ -88,6 +88,7 @@ class Board:
         n1 = self.pieces[knight].currentPoint
         b1 = self.pieces[bishop].currentPoint
         if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#check that their king is attacking both knight and bishop
+
             if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
 
                 trapped = True
@@ -98,8 +99,9 @@ class Board:
 
                     if (self.bishopOnEdge(b1)):#bishop is on edge, bishop and knight adjacent, must move the knight
 
-                        self.knightTrapped()
-                        trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
+                        if (not self.bishopTrapped(b1, capture=False)):#only if the bishop is not trapped, there is chance to save it
+                            self.knightTrapped()
+                            trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
                         
                     else:#bishop is not on edge, bishop and knight adjacent, move bishop
                         
@@ -202,6 +204,12 @@ class Board:
         for piece in self.recommendedMoves:
             self.recommendedMoves[piece] = []
         
+    def bishopTrapped(self, b1, capture):#determine if the bishop is trapped in the corner, if so the game ends in a draw
+        if (len(self.pieces[knight].getMoves(b1, capture))==0):#if the bishop has no moves, then it must be in 
+            #the corner and it is trapped by the knight and their king
+            return True
+        return False
+
 # functions unique to a chess piece, parent of king, knight, bishop          
 # get input recieves the point on the board from when the program starts running
 # remove occupied removes the squares occupied by pieces from a list of possible moves
