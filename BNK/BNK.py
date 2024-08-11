@@ -12,8 +12,7 @@ yourKing = "your king"
 theirKing = "their king"
 columnLetters = "abcdefgh"
 letterDictionary = {} 
-gameOver = False
-win = False
+
 
 # functions that are unique to a board
 # update board updates the board with all the pieces (and their positions) and updates each piece with a copy of the board
@@ -122,15 +121,15 @@ class Board:
     def bishopDefendKnight(self, b1, n1, k1, needKing):#determine which moves (if any) allow the bishop to defend the knight, may need help of king or may not
         bOptimized = []
         trapped = True
-        for move in self.pieces[bishop].getMoves(b1, capture=False):
+        for move in self.pieces[bishop].validMoves:
             if n1 in self.pieces[bishop].getMoves(move, capture=True):
                 if (not needKing):
                     bOptimized.append(move)
                     trapped = False
                 else:
                     if self.adjacent(move, k1):
-                            bOptimized.append(move)
-                            trapped = False
+                        bOptimized.append(move)
+                        trapped = False
         self.recommendedMoves[bishop] = bOptimized
         return trapped
 
@@ -209,6 +208,18 @@ class Board:
             #the corner and it is trapped by the knight and their king
             return True
         return False
+    
+    def printRecommendedMoves(self):
+        print("{0:<10s}{1:<5s}{2:<20s}".format("Piece","","Recommended moves"))#headings
+        print("{0:-<10s}{1:<5s}{2:-<20s}".format("","",""))
+        for piece in Board1.recommendedMoves:
+            allMoves = ""
+            if (len(Board1.recommendedMoves[piece]) != 0):
+                for move in Board1.recommendedMoves[piece]:
+                    allMoves = allMoves + Board1.convertToName(move) + ", "
+                allMoves = allMoves[:-2]
+                print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
+
 
 # functions unique to a chess piece, parent of king, knight, bishop          
 # get input recieves the point on the board from when the program starts running
@@ -373,72 +384,69 @@ class Bishop(ChessPiece):
 
 
 
-#Main Program
+# Main Program 
+# Main Program 
+# Main Program
+
+#game state variables
+gameOver = False
+win = False
+
 i = 1
 for c in columnLetters:#populate the dictionary that maps letter columns to number values
     letterDictionary[c] = i
     i+=1
 
-print("Please start with your move to play.")
-#create board and pieces
-Board1 = Board() 
-B1 = Bishop(Board1)
-N1 = Knight(Board1)
-K1 = King(Board1, yourKing) 
-K2 = King(Board1, theirKing) 
-B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
-#compute next moves
-B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
-N1.validMoves = N1.getMoves(N1.currentPoint, capture=False)
-K1.validMoves = K1.getMoves(K1.currentPoint, capture = False)
-#synchronize board and pieces after each update
-B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
+
 
 #to test the program try using this visualizer:
 # https://lichess.org/editor/8/3K4/8/4N3/3k4/1B6/8/8_w_HAha_-_0_1?color=white 
 # ie. Place your bishop on g2, your knight on h8, your king on d7, and their king on g7
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
 
-'''
-print("{0:-<35s}".format(""))
+#create board and pieces once at the start of program
+Board1 = Board() 
+B1 = Bishop(Board1)
+N1 = Knight(Board1)
+K1 = King(Board1, yourKing) 
+K2 = King(Board1, theirKing) 
+B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
-if (Board1.knightTrapped()):
-    gameOver = True
-    win = False
+#compute next moves, compute valid moves once at start, and everytime a move is made, update
+#and synchronize board and pieces after each update
+B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
+N1.validMoves = N1.getMoves(N1.currentPoint, capture=False)
+K1.validMoves = K1.getMoves(K1.currentPoint, capture = False)
+B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
+
+#checks for immediate danger of draw
+gameOver = Board1.knightBishopTrapped()
+
+skip = False
+
+for piece in Board1.recommendedMoves: #determines if we need to run the next function or not 
+    #(knight trapped is redundant if both knight and bishop are trapped)
+    if len(Board1.recommendedMoves[piece]):
+        skip = True
+
+if (not skip):
+    gameOver = Board1.knightTrapped()
+
+
+
+B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
+Board1.printRecommendedMoves() 
+
+
+while (not gameOver):
+    gameOver = True    
+
+    
+#game is over
+if (win):
+    print("\nYou won by checkmate.")
 else:
-    B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
-    print("{0:<10s}{1:<5s}{2:<20s}".format("Piece","","Recommended moves"))#headings
-    print("{0:-<10s}{1:<5s}{2:-<20s}".format("","",""))
-    for piece in Board1.recommendedMoves:
-        allMoves = ""
-        if (len(Board1.recommendedMoves[piece]) != 0):
-            for move in Board1.recommendedMoves[piece]:
-                allMoves = allMoves + Board1.convertToName(move) + ", "
-            allMoves = allMoves[:-2]
-            print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
-'''     
+    print("\nYou are going to lose a piece. The result is a draw by way of insufficient material.")
 
-if (Board1.knightBishopTrapped()):
-    gameOver = True
-    win = False
-else:
-    B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
-    print("{0:<10s}{1:<5s}{2:<20s}".format("Piece","","Recommended moves"))#headings
-    print("{0:-<10s}{1:<5s}{2:-<20s}".format("","",""))
-    for piece in Board1.recommendedMoves:
-            allMoves = ""
-            if (len(Board1.recommendedMoves[piece]) != 0):
-                for move in Board1.recommendedMoves[piece]:
-                    allMoves = allMoves + Board1.convertToName(move) + ", "
-                allMoves = allMoves[:-2]
-                print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
-
-if (gameOver):
-    if (win):
-        print("\nYou won by checkmate.")
-    else:
-        print("\nYou are going to lose a piece. The result is a draw by way of insufficient material.")
-else: 
-    print("\nThe game is still in play.")
 
 
