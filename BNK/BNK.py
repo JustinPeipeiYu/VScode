@@ -80,6 +80,9 @@ class Board:
         else:
             return True 
 
+    '''
+    
+    '''
     def knightBishopTrapped(self):#check if knight and bishop are under attack
         trapped = False
         k1 = self.pieces[yourKing].currentPoint
@@ -100,21 +103,24 @@ class Board:
 
                         if (not self.bishopTrapped(b1, capture=False)):#only if the bishop is not trapped, there is chance to save it
                             self.knightTrapped()
-                            trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
+                            trapped = self.knightDefendBishop(self.pieces[knight].validMoves, b1,k1)#determine which moves (if any) allow knight to defend bishop
                         
                     else:#bishop is not on edge, bishop and knight adjacent, move bishop
                         
                         self.knightTrapped()
-                        trapped = self.knightDefendBishop(b1,k1)#determine which moves (if any) allow knight to defend bishop
+                        trapped = self.knightDefendBishop(self.pieces[knight].validMoves, b1,k1)#determine which moves (if any) allow knight to defend bishop
 
                         trapped = self.bishopDefendKnight(b1, n1, k1, needKing = False)#determine which moves (if any) allow bishop to defend knight
                 
                 else:#the knight and bishop are not adjacent and their king is in between them, to save both, you must either move knight or move bishop with king helping it
                     
                     self.knightTrapped()#get list of recommended moves for knight
-                    trapped = self.knightDefendBishop(b1,k1)#determines which moves (if any) allow the knight to defend bishop
+                    trapped = self.knightDefendBishop(self.pieces[knight].validMoves, b1,k1)#determines which moves (if any) allow the knight to defend bishop
 
                     trapped = self.bishopDefendKnight(b1, n1, k1, needKing=True)#determines which moves (if any) allow the bishop to defend knight
+            else:#if the knight and bishop are on different colours, the only way they can be saved is if the knight defends the bishop already
+                #and the king steps in to defend the knight
+                pass
 
         return trapped
     
@@ -133,10 +139,16 @@ class Board:
         self.recommendedMoves[bishop] = bOptimized
         return trapped
 
-    def knightDefendBishop(self, b1, k1):#determine which (if any) moves allow the knight to defend bishop with help of the king
+    '''
+    Using a for loop, go through the list of starting points (ie. self.pieces[knight].validMoves) and get all the next moves for piece including all 
+    moves that can capture
+    Return true if the bishop's position is one of those in the moves that knight can capture
+    add that move to recommendedMoves for the knight
+    '''
+    def knightDefendBishop(self, moves, b1, k1):#determine which (if any) moves allow the knight to defend bishop with help of the king
         trapped = True
         nOptimized = []
-        for move in self.pieces[knight].validMoves:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
+        for move in moves:#check each recommended move to see if any of its next moves lands on bishop, if it does, check if the king is able to defend knight next, if so, can add to new list of optimized recommended moves
                 if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):
                         nOptimized.append(move)
                         trapped = False
@@ -443,10 +455,13 @@ while (not gameOver):
 
     
 #game is over
+'''
 if (win):
     print("\nYou won by checkmate.")
 else:
     print("\nYou are going to lose a piece. The result is a draw by way of insufficient material.")
+'''
+
 
 
 
