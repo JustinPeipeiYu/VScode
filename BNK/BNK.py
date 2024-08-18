@@ -103,48 +103,43 @@ class Board:
             
 
     '''
-    #1. check that K2 (their king) is adjacent to B1 (your bishop) and N1 (your knight)
-    #2. check that K1 (your king) is not defending B1 or defending N1 --> must move B1 or N1
-    #3a. check that N1 and B1 are on same-colored squares 
-    #4. check if N1 and B1 are adjacent --> B1 defends N1
-    #5. check if B1 is on edge square
-    #6. check if B1 is on corner square
-    #3b. check if N1 defends B1 while they are on different-colored squares
-    '''
+    #1. check that K2 is adjacent to B1 and N1
+    #2. check that K1 is not defending B1 nor N1 --> must move B1 or N1
+    #3. check that N1 and B1 are on same-colored squares 
+    #3a. check if N1 and B1 are adjacent --> move B1, N1, or K1
+    #3b. check if B1 is on edge square
+    #3c. check if B1 is on corner square
+    #4. N1 and B1 on different-colored squares --> check if N1 defends B1
+    
     def knightBishopTrapped(self):#check if knight and bishop are under attack
         k1 = self.pieces[yourKing].currentPoint
         k2 = self.pieces[theirKing].currentPoint
         n1 = self.pieces[knight].currentPoint
         b1 = self.pieces[bishop].currentPoint
-        '''#1'''
-        if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):
-            '''#2'''
-            if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#check that your king is not adjacent
-                '''#3'''
-                if (self.lightOrDark(n1)==self.lightOrDark(b1)):#if knight and bishop are on same color, potentially they can both be saved           
-                    '''#4'''
-                    if (self.adjacent(n1,b1)):
-                        '''#5'''
-                        if (self.bishopOnEdge()):# bishop and knight adjacent same color, bishop is on edge, must move the knight
-                            '''#6'''
-                            pass#determine which moves (if any) allow knight to defend bishop
-                        else:#bishop and knight adjacent same color, bishop is not on edge,  move bishop
-                            '''#8'''
-                            self.bishopDefendKnight()#determine which moves (if any) allow bishop to defend knight
-                    else:#the knight and bishop are not adjacent and their king is in between them, to save both, you must either move knight or move bishop with king helping it
-                          pass
+
+        if (self.adjacent(k2,n1) and self.adjacent(k2,b1)):#1
+            if (not self.adjacent(k1,n1) and not self.adjacent(k1,b1)):#2
+                if (self.lightOrDark(n1)==self.lightOrDark(b1)):#3  
+                    if (self.adjacent(n1,b1)):#3a.1
+                        if (self.bishopOnEdge()):#3b.1
+                            self.knightDefendBishop()
+                        else: #3b.2
+                            self.bishopDefendKnight()
+                            self.knightDefendBishop()
+                    else: #3a.2
+                          self.bishopDefendKnight()
                           #determines which moves (if any) allow the bishop to defend knight
                 else:#if the knight and bishop are on different colours, the only way they can be saved is if the knight defends the bishop already
                     #and the king steps in to defend the knight
                     pass
             else:#K1 is adjacent to N1 or adjacent to B1 meaning one of them is under attack by K2
                 if (self.adjacent(k1, b1)):#N1 under attack
-                    self.knightTrapped()
+                    self.knightEscape()
                     self.bishopDefendKnight()
                 elif (self.adjacent(k1, n1)):#B1 under attack
                     self.bishopTrapped()
                     self.knightDefendBishop()
-    
+    '''
     '''
     Goal: defend knight
     Action: move bishop to square that defends knight
@@ -187,11 +182,9 @@ class Board:
                 self.recommendedMoves[bishop].append(move)
 
     '''
-    1. check if K2 (their king) is adjacent to N1 (your knight)
-    2. check if N1 is not defended by K1 (your king) 
-    3. check if N1 is not defended by B1 (your bishop)
+    To save the knight
     '''
-    def knightTrapped(self):#check if the knight is under attack, check if it is trapped, recommend moves if it is trapped
+    def knightEscape(self):#check if the knight is under attack, check if it is trapped, recommend moves if it is trapped
         k1 = self.pieces[yourKing].currentPoint
         k2 = self.pieces[theirKing].currentPoint
         n1 = self.pieces[knight].currentPoint
@@ -265,7 +258,7 @@ class Board:
                 allMoves = allMoves[:-2]
                 print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
 
-    '''1. Select from options the farthest coordinate points to a coordinate point'''
+    '''1. Select from options the farthest coordinate points to a coordinate point
     def farthestMoveAway(self, moves, point):#selects a piece's farthest moves from a point from a list of moves
         farthest = 0
         farthestMoves = []
@@ -278,8 +271,8 @@ class Board:
             if (dist == farthest): 
                 farthestMoves.append(move)
         return farthestMoves
-    
-    '''1. Select from options the closest coordinate points to a coordinate point'''
+    '''
+    '''1. Select from options the closest coordinate points to a coordinate point
     def closestMoveTo(self, moves, point):#selects a piece's closest moves to a point from a list of moves
         closest = 100
         closestMoves = []
@@ -292,7 +285,7 @@ class Board:
             if (dist == closest):  #filters for all next move squares that have closest distance
                 closestMoves.append(move)#use that option as the recommended
         return closestMoves
-
+    '''
 '''class that pertain to the creation and behaviour of a new piece'''
 class ChessPiece:
     def __init__(self, pieceName, Board1):
@@ -336,57 +329,67 @@ class King(ChessPiece):
     def __init__(self, Board1, name):
         ChessPiece.__init__(self, name, Board1)
 
-    def getMoves(self,point, capture):#to get all king's moves, place the king in the center of a 3x3 square
+    def getMoves(self,point, capture):
         validMoves = []
-        for i in range(-1,2):
+        for i in range(-1,2):#0 or 1 step horizontal
             for j in range(-1,2):
-                newPoint = [point[0]+i, point[1]+j]
-                if not Board1.offBoard(newPoint): #check the next move is within boundaries of board and not adjacent to their king
-                        if (capture):#if the king intends to capture with it's next move (aka it is defend the knight) then add every new point
-                            validMoves.append(newPoint)
+                newPoint = [point[0]+i, point[1]+j]#0 or 1 step vertical
+                if not self.Board1.offBoard(newPoint):
+                        if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)):
+                            if (capture):
+                                validMoves.append(newPoint)
                         else:
-                            if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)):#otherwise, only add the new point if it is not adjacent to their king
+                            if ((newPoint !=self.Board1.pieces[bishop].currentPoint) and (newPoint!=self.Board1.pieces[knight].currentPoint)):
                                 validMoves.append(newPoint) 
-        validMoves.remove(point)#remove the current square (not a move)
+        validMoves.remove(point)#remove 0 steps vertical, zero steps horizontal
         return validMoves
 
 
 
-'''class that pertain to bahaviour of a knight'''
+
+
 class Knight(ChessPiece):
     def __init__(self, Board1):
         ChessPiece.__init__(self, knight, Board1)
     
-    def getMoves(self, point, capture):#to get horse's L shape moves, simultaneously move 2 steps vertically with 1 step horizontally (and vice versa)
+    def getMoves(self, point, capture):
         validMoves = []
-        for i in range(-1,2,2): #loop repeats 4 times 
+        for i in range(-1,2,2):
             for j in range(-2,3,4): 
-                newPoint1 = [point[0]+i, point[1]+j]
-                newPoint2 = [point[0]+j, point[1]+i]
-                if (capture):
-                    validMoves.append(newPoint1)
-                    validMoves.append(newPoint2)
-                else:
-                    if ((not self.Board1.offBoard(newPoint1)) and (newPoint1 != self.Board1.pieces[yourKing].currentPoint) and (newPoint1 != self.Board1.pieces[bishop].currentPoint)): #check the next move is still within boundaries of board and not on any off your pieces
+                newPoint1 = [point[0]+i, point[1]+j] #1 square horizontal, 2 squares vertical
+                if (not self.Board1.offBoard(newPoint1)):
+                    if (capture):#all moves are valid when capture is on
                         validMoves.append(newPoint1)
-                    if ((not self.Board1.offBoard(newPoint2)) and (newPoint2 != self.Board1.pieces[yourKing].currentPoint) and (newPoint2 != self.Board1.pieces[bishop].currentPoint)): #check the next move is still within boundaries of board and not on any off your pieces 
-                        validMoves.append(newPoint2)    
+                    else:
+                        if ((newPoint1 != self.Board1.pieces[yourKing].currentPoint) and 
+                            (newPoint1 != self.Board1.pieces[bishop].currentPoint)): #only moves that are not blocked by king and bishop are valid
+                            validMoves.append(newPoint1)
+                newPoint2 = [point[0]+j, point[1]+i]#2 squares horizontal, 1 square vertical
+                if (not self.Board1.offBoard(newPoint2)):
+                    if (capture):#all moves are valid when capture is on
+                        validMoves.append(newPoint2)
+                    else:
+                        if ((newPoint2 != self.Board1.pieces[yourKing].currentPoint) and 
+                            (newPoint2 != self.Board1.pieces[bishop].currentPoint)): #only moves that are not blocked by king and bishop are valid
+                            validMoves.append(newPoint2)
+
         return validMoves
-    
-'''class that pertains to the behaviour of a bishop'''
+
+
+
 class Bishop(ChessPiece):
     def __init__(self, Board1):
         ChessPiece.__init__(self, bishop, Board1)
     
-    def getMoves(self, point, capture):#to get all diagonally moves, place bishop in origin and move 1 step vertical & horizontal from origin in each quadrant
+    def getMoves(self, point, capture):
         validMoves = []
-        for x in range(-1,2,2):#x=-1,1
-            for y in range(-1,2,2):#y=-1,1
+        for x in range(-1,2,2): #move left or right
+            for y in range(-1,2,2): #move up or down
                 valid = True
                 i = 1
                 while(valid):
-                    newPoint = [point[0]+ x * i, point[1]+ y * i] #to get new point, add/subtract increments of 1 to x and y repeatedly until you bump into another piece, land adjacent to their king, or fall off board ie. x + 1 * i, y - 1 * i,  i = 1,2,3...
-                    if not Board1.offBoard(newPoint): #check the next move is still within boundaries of board, 
+                    newPoint = [point[0]+ x * i, point[1]+ y * i] #move one step on diagonal
+                    if not Board1.offBoard(newPoint):
                         if ((newPoint != self.Board1.pieces[yourKing].currentPoint) and (newPoint != self.Board1.pieces[knight].currentPoint)): #and is not on one of its own pieces
                             validMoves.append(newPoint)
                             i+=1
@@ -451,7 +454,7 @@ for piece in Board1.recommendedMoves: #determines if we need to run the next fun
 
 '''if knight and bishop are trapped, no need to check if knight is trapped, game is already over'''
 if (not skip):
-    Board1.knightTrapped()
+    Board1.knightEscape()
 
 
 '''update board and pieces'''
