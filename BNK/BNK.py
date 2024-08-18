@@ -315,13 +315,7 @@ class ChessPiece:
             if (repeat == True):#at least one condition failed, repeat loop
                 print("Sorry that is an invalid entry. Please try again.")
         #end while loop
-        return Board1.convertToPoint(entry)
-    
-    '''modifies valid moves to exclude captures'''
-    def removeOccupied(self):#removes squares occupied from the pieces in the dictionary from the possible valid moves  
-        for p in self.Board1.pieces:
-            if p.currentPoint in self.validMoves:
-                self.validMoves.remove(p.currentPoint)
+        return self.Board1.convertToPoint(entry)
     
     
 '''methods that pertain to the behaviour of a king''' 
