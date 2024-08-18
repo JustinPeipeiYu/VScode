@@ -287,6 +287,9 @@ class Board:
         return closestMoves
     '''
 '''class that pertain to the creation and behaviour of a new piece'''
+
+
+
 class ChessPiece:
     def __init__(self, pieceName, Board1):
         self.pieceName = pieceName
@@ -298,7 +301,7 @@ class ChessPiece:
         repeat = True
         while (repeat==True):
             entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
-            repeat = False #switch repeat to on when a condition fails
+            repeat = False
             if (len(entry)!=2): #condition 1: entry is not two characters long
                  repeat = True
             else:
@@ -310,15 +313,16 @@ class ChessPiece:
                     except:
                         repeat=True
                     if (repeat == False):
-                        if (int(entry[1])>Board1.max and int(entry[1])<Board1.min):#condition 4: 2nd character is not in range of board
+                        if (int(entry[1])>Board1.max and int(entry[1])<Board1.min):#condition 4: 2nd character is not in range of 1-8
                             repeat=True
             if (repeat == True):#at least one condition failed, repeat loop
                 print("Sorry that is an invalid entry. Please try again.")
-        #end while loop
         return self.Board1.convertToPoint(entry)
     
     
-'''methods that pertain to the behaviour of a king''' 
+
+
+
 class King(ChessPiece):
     def __init__(self, Board1, name):
         ChessPiece.__init__(self, name, Board1)
