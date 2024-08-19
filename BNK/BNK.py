@@ -21,7 +21,7 @@ class Board:
         '''1'''
         self.pieces = {}#1. holds chess piece objects
         '''2'''
-        self.recommendedMoves = {knight:[],bishop:[],yourKing:[],theirKing:[]} #2. recommended moves for each piece
+        #self.recommendedMoves = {knight:[],bishop:[],yourKing:[],theirKing:[]} #2. recommended moves for each piece
         '''3'''
         self.min = 1#3. minimum board size
         '''4'''
@@ -30,12 +30,15 @@ class Board:
     '''
     updates board with the pieces, saves the board to each of those pieces, returns the pieces in a list
     '''
+   
     def updateBoard(self, listOfPieces): 
         for piece in listOfPieces:
             self.pieces[piece.pieceName] = piece
         for piece in listOfPieces:
             piece.Board1 = self
         return listOfPieces
+    
+    
 
     '''
     returns true is the coordinate point is not within the dimensions of the board
@@ -302,20 +305,20 @@ class ChessPiece:
         while (repeat==True):
             entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
             repeat = False
-            if (len(entry)!=2): #condition 1: entry is not two characters long
+            if (len(entry)!=2): #check condition 1: entry is not two characters long
                  repeat = True
             else:
-                if (entry[0] not in columnLetters): #condition 2: 1st character is not letter a-h
+                if (entry[0] not in columnLetters): #check condition 2: 1st character is not letter a-h
                     repeat = True 
                 else:
-                    try: #condition 3: 2nd character is not integer
+                    try: #check condition 3: 2nd character is not integer
                         int(entry[1])
                     except:
                         repeat=True
                     if (repeat == False):
-                        if (int(entry[1])>Board1.max and int(entry[1])<Board1.min):#condition 4: 2nd character is not in range of 1-8
+                        if (int(entry[1])>Board1.max and int(entry[1])<Board1.min):#check condition 4: 2nd character is not in range of 1-8
                             repeat=True
-            if (repeat == True):#at least one condition failed, repeat loop
+            if (repeat == True):#at least one condition failed, retry
                 print("Sorry that is an invalid entry. Please try again.")
         return self.Board1.convertToPoint(entry)
     
@@ -329,17 +332,22 @@ class King(ChessPiece):
 
     def getMoves(self,point, capture):
         validMoves = []
-        for i in range(-1,2):#0 or 1 step horizontal
+        for i in range(-1,2):
             for j in range(-1,2):
-                newPoint = [point[0]+i, point[1]+j]#0 or 1 step vertical
+                newPoint = [point[0]+i, point[1]+j]
+                #include if move is 1 step horizontal or 1 step vertical
                 if not self.Board1.offBoard(newPoint):
-                        if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)):
+                        #include if move is not off the board
+                        if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)
+                            and newPoint != self.Board1.pieces[yourKing].currentPoint):
+                            #include if move is not next to their king and not the current position
                             if (capture):
                                 validMoves.append(newPoint)
-                        else:
-                            if ((newPoint !=self.Board1.pieces[bishop].currentPoint) and (newPoint!=self.Board1.pieces[knight].currentPoint)):
-                                validMoves.append(newPoint) 
-        validMoves.remove(point)#remove 0 steps vertical, zero steps horizontal
+                            else:
+                                if ((newPoint !=self.Board1.pieces[bishop].currentPoint) 
+                                    and (newPoint!=self.Board1.pieces[knight].currentPoint)):
+                                    #include if move when is not on another piece
+                                    validMoves.append(newPoint) 
         return validMoves
 
 
@@ -354,21 +362,27 @@ class Knight(ChessPiece):
         validMoves = []
         for i in range(-1,2,2):
             for j in range(-2,3,4): 
-                newPoint1 = [point[0]+i, point[1]+j] #1 square horizontal, 2 squares vertical
+                #include if move is 1 square horizontal and 2 squares vertical
+                newPoint1 = [point[0]+i, point[1]+j] 
                 if (not self.Board1.offBoard(newPoint1)):
-                    if (capture):#all moves are valid when capture is on
+                    #include if move is not off the board
+                    if (capture):
                         validMoves.append(newPoint1)
                     else:
-                        if ((newPoint1 != self.Board1.pieces[yourKing].currentPoint) and 
-                            (newPoint1 != self.Board1.pieces[bishop].currentPoint)): #only moves that are not blocked by king and bishop are valid
+                        if ((newPoint1 != self.Board1.pieces[yourKing].currentPoint)  
+                            and (newPoint1 != self.Board1.pieces[bishop].currentPoint)): 
+                            #include if move is not on one of your pieces
                             validMoves.append(newPoint1)
-                newPoint2 = [point[0]+j, point[1]+i]#2 squares horizontal, 1 square vertical
+                #include if move is 2 squares horizontal and 1 square vertical
+                newPoint2 = [point[0]+j, point[1]+i]
                 if (not self.Board1.offBoard(newPoint2)):
-                    if (capture):#all moves are valid when capture is on
+                    #include if the move is not off the board
+                    if (capture):
                         validMoves.append(newPoint2)
                     else:
                         if ((newPoint2 != self.Board1.pieces[yourKing].currentPoint) and 
-                            (newPoint2 != self.Board1.pieces[bishop].currentPoint)): #only moves that are not blocked by king and bishop are valid
+                            (newPoint2 != self.Board1.pieces[bishop].currentPoint)): 
+                            #include if move is not on one of your pieces
                             validMoves.append(newPoint2)
 
         return validMoves
@@ -381,22 +395,27 @@ class Bishop(ChessPiece):
     
     def getMoves(self, point, capture):
         validMoves = []
-        for x in range(-1,2,2): #move left or right
-            for y in range(-1,2,2): #move up or down
-                valid = True
+        for x in range(-1,2,2):
+            for y in range(-1,2,2):
+                stop = False
                 i = 1
-                while(valid):
-                    newPoint = [point[0]+ x * i, point[1]+ y * i] #move one step on diagonal
+                while(not stop):
+                    #only include move if it is 1 step vertical and 1 step horizontal
+                    newPoint = [point[0]+ x * i, point[1]+ y * i] 
                     if not Board1.offBoard(newPoint):
-                        if ((newPoint != self.Board1.pieces[yourKing].currentPoint) and (newPoint != self.Board1.pieces[knight].currentPoint)): #and is not on one of its own pieces
+                        if ((newPoint != self.Board1.pieces[yourKing].currentPoint) 
+                            and (newPoint != self.Board1.pieces[knight].currentPoint)):
+                            #only include move if it is not on one of your pieces
                             validMoves.append(newPoint)
                             i+=1
                         else:
-                            if (capture): #if we are computing moves to capture, then we have to add the square that a piece occupied
+                            #stop finding moves when move lands on one of your pieces
+                            stop = True
+                            if (capture):
                                 validMoves.append(newPoint)
-                            valid = False
                     else:
-                        valid = False
+                        #stop finding moves when move is off the board
+                        stop = True
         return validMoves
 
 
@@ -436,34 +455,39 @@ B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2])
 B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
 N1.validMoves = N1.getMoves(N1.currentPoint, capture=False)
 K1.validMoves = K1.getMoves(K1.currentPoint, capture = False)
-
-'''updating pieces and board'''
 B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
-''' determine if the knight and bishop are trapped'''
+'''
+print(B1.validMoves)
+print(N1.validMoves)
+print(K1.validMoves)
+'''
+
+
+''' determine if the knight and bishop are trapped
 Board1.knightBishopTrapped()
 
-'''decide necessity of determining if knight is trapped'''
+decide necessity of determining if knight is trapped
 skip = False
 for piece in Board1.recommendedMoves: #determines if we need to run the next function or not 
     #(knight trapped is redundant if both knight and bishop are trapped)
     if len(Board1.recommendedMoves[piece]):
         skip = True
 
-'''if knight and bishop are trapped, no need to check if knight is trapped, game is already over'''
+if knight and bishop are trapped, no need to check if knight is trapped, game is already over
 if (not skip):
     Board1.knightEscape()
 
 
-'''update board and pieces'''
+update board and pieces
 B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
-'''display the recommended moves or inform the user that the game is over'''
+display the recommended moves or inform the user that the game is over
 if (not gameOver):
     Board1.printRecommendedMoves() 
 else:
     print("\nYou are going to lose a piece. The result is a draw by way of insufficient material.")
-
+'''
 
 
 
