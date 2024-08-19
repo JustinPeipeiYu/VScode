@@ -39,7 +39,6 @@ class Board:
         return listOfPieces
     
     
-
     '''
     returns true is the coordinate point is not within the dimensions of the board
     '''
@@ -98,12 +97,12 @@ class Board:
 
     '''
     returns true if the bishop can get from point 1 to point 2 in one move
-    '''
+   
     def oneStepBishopMove(self, point1, point2): #determines if the bishop can get from point 1 to point 2 in 1 step
         if (abs(point1[0])-abs(point2[0])) == (abs(point1[1])-abs(point2[1])):
             return True
         return False
-            
+    '''
 
     '''
     #1. check that K2 is adjacent to B1 and N1
@@ -146,7 +145,7 @@ class Board:
     '''
     Goal: defend knight
     Action: move bishop to square that defends knight
-    '''
+    
     def bishopDefendKnight(self):#determine which moves (if any) allow the bishop to defend the knight, may need help of king or may not
         bOptimized = []
         k1 = self.pieces[yourKing].currentPoint
@@ -162,11 +161,11 @@ class Board:
                     else:
                         bOptimized.append(move)
             self.recommendedMoves[bishop] = bOptimized
-
+    '''
     '''
     Goal: defend Bishop
     Action: move Knight to a square that defends bishop
-    '''
+   
     def knightDefendBishop(self):#determine which (if any) moves allow the knight to defend bishop with help of the king
         moves = self.pieces[knight].validMoves
         k1 = self.pieces[yourKing].currentPoint
@@ -176,33 +175,30 @@ class Board:
                 if (b1 in self.pieces[knight].getMoves(move, capture=True) and self.withinOneStep(move,k1)):
                         nOptimized.append(move)
         self.recommendedMoves[knight] = nOptimized #add the move that defends the knight and bishop
-    
-    '''1. return True if B1 pinned to a corner square by K2 and N1'''
+    '''
+    '''1. return True if B1 pinned to a corner square by K2 and N1
     def bishopTrapped(self):#determine if the bishop is trapped in the corner, if so the game ends in a draw
         if (len(self.pieces[bishop].validMoves)!=0):#if the bishop has moves, then it is not in 
             #the corner and is not trapped by your knight and their king
             for move in self.pieces[bishop].validMoves:
                 self.recommendedMoves[bishop].append(move)
-
     '''
-    To save the knight
+    
     '''
     def knightEscape(self):#check if the knight is under attack, check if it is trapped, recommend moves if it is trapped
         k1 = self.pieces[yourKing].currentPoint
         k2 = self.pieces[theirKing].currentPoint
         n1 = self.pieces[knight].currentPoint
         b1 = self.pieces[bishop].currentPoint
-        '''#1'''
+        #1
         if (self.adjacent(k2, n1)):#if the knight is under attack
-            '''#2'''
+            #2
             if (not self.adjacent(n1,k1)):#move K1 to defend N1
-                '''K1 moves to defend N1'''
                 for move in self.pieces[yourKing].validMoves: 
                     if (self.adjacent(move, n1)):#check if king can move to defend the knight
                         self.recommendedMoves[yourKing].append(move)
-                '''#3'''
+                #3
                 if (not n1 in self.pieces[bishop].getMoves(b1, capture = True)):#if the knight is not guarded by the bishop 
-                    '''N1 moves away from K2 or moves to be defended by K1'''
                     for move in self.pieces[knight].validMoves:#if the knight can save itself
                         if (not self.adjacent(move, k2)): #if knight has valid move away from their king, it is not trapped 
                             self.recommendedMoves[knight].append(move)
@@ -211,24 +207,24 @@ class Board:
                         if (move in self.pieces[bishop].getMoves(b1,capture=True)):#if the next move is guarded by bishop
                             self.recommendedMoves[knight].append(move)
         self.removeDuplicates()#remove any duplicate points added        
-    
+    '''
 
-    '''1. return True if B1 is on edge square'''
+    '''
     def bishopOnEdge(self):#determines whether the bishop is trapped on the edge
         onEdge = False
         b1 = self.pieces[bishop].currentPoint
         if (b1[0] == self.max or b1[0] == self.min or b1[1] == self.max or b1[1] == self.min):#if any of the bishop's coordinate values are max or min, then the bishop is on the edge
             onEdge = True
         return onEdge
-
-    '''1. return True if coordinate point is on light square'''
+    '''
+    '''1. return True if coordinate point is on light square
     def lightOrDark(self, point):#determines whether point falls on light square or dark square
         light = True
         if ((point[0] + point[1]) % 2 == 0): #ie. bishop is on dark square if on sum of x and y are even ie. [1,1] --> (1 + 1) % 2 == 0
             light = False
         return light
-    
-    '''1. remove duplicated key values from property #2'''
+    '''
+    '''1. remove duplicated key values from property #2
     def removeDuplicates(self):#removes duplicate points in recommended moves dictionary
         for piece in self.recommendedMoves:
             nonDuplicates = []
@@ -236,20 +232,20 @@ class Board:
                 if (move not in nonDuplicates):
                     nonDuplicates.append(move)
             self.recommendedMoves[piece] = nonDuplicates
-
-    '''1. checks if the game is over based on how many recommended moves there are'''
+    '''
+    '''1. checks if the game is over based on how many recommended moves there are
     def checkGameOver(self):
         gameOver = True
         for piece in self.recommendedMoves:
             if len(self.recommendMoves[piece])!=0:
                 gameOver = False
-
-    '''1. clear all key values of property #2'''
+    '''
+    '''1. clear all key values of property #2
     def clearAll(self):#clears all points in recommended moves dictionary
         for piece in self.recommendedMoves:
             self.recommendedMoves[piece] = []
-    
-    '''1. display keys and values of property #2'''
+    '''
+    '''1. display keys and values of property #2
     def printRecommendedMoves(self):
         print("{0:<10s}{1:<5s}{2:<20s}".format("Piece","","Recommended moves"))#headings
         print("{0:-<10s}{1:<5s}{2:-<20s}".format("","",""))
@@ -260,7 +256,7 @@ class Board:
                     allMoves = allMoves + Board1.convertToName(move) + ", "
                 allMoves = allMoves[:-2]
                 print("{0:<10s}{1:<5s}{2:<20s}".format(piece,"",allMoves))#table entries
-
+    '''
     '''1. Select from options the farthest coordinate points to a coordinate point
     def farthestMoveAway(self, moves, point):#selects a piece's farthest moves from a point from a list of moves
         farthest = 0
