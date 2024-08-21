@@ -322,9 +322,9 @@ class ChessPiece:
 
 
 
-class King(ChessPiece):
-    def __init__(self, Board1, name):
-        ChessPiece.__init__(self, name, Board1)
+class YourKing(ChessPiece):
+    def __init__(self, Board1):
+        ChessPiece.__init__(self, yourKing, Board1)
 
     def getMoves(self,point, capture):
         validMoves = []
@@ -335,7 +335,7 @@ class King(ChessPiece):
                 if not self.Board1.offBoard(newPoint):
                         #include if move is not off the board
                         if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)
-                            and newPoint != self.Board1.pieces[yourKing].currentPoint):
+                            and newPoint != self.currentPoint):
                             #include if move is not next to their king and not the current position
                             if (capture):
                                 validMoves.append(newPoint)
@@ -347,7 +347,25 @@ class King(ChessPiece):
         return validMoves
 
 
+class TheirKing(ChessPiece):
+    def __init__(self, Board1):
+        ChessPiece.__init__(self, theirKing, Board1)
 
+    def getMoves(self,point, capture):
+        validMoves = []
+        for i in range(-1,2):
+            for j in range(-1,2):
+                newPoint = [point[0]+i, point[1]+j]
+                #include if move is 1 step horizontal or 1 step vertical
+                if not self.Board1.offBoard(newPoint):
+                        #include if move is not off the board
+                        if (not newPoint in self.Board1.pieces[yourKing].validMoves and 
+                            not newPoint in self.Board1.pieces[bishop].validMoves and
+                            not newPoint in self.Board1.pieces[knight].validMoves and
+                            newPoint != self.currentPoint):
+                            #include if move is not next to their king and not the current position
+                            validMoves.append(newPoint)
+        return validMoves
 
 
 class Knight(ChessPiece):
@@ -443,21 +461,23 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 Board1 = Board() 
 B1 = Bishop(Board1)
 N1 = Knight(Board1)
-K1 = King(Board1, yourKing) 
-K2 = King(Board1, theirKing) 
+K1 = YourKing(Board1) 
+K2 = TheirKing(Board1) 
 B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
 '''get a list of moves given the current piece position, save those moves in the property of the piece'''
 B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
 N1.validMoves = N1.getMoves(N1.currentPoint, capture=False)
 K1.validMoves = K1.getMoves(K1.currentPoint, capture = False)
+K2.validMoves = K2.getMoves(K2.currentPoint, capture = False)
 B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
-'''
-print(B1.validMoves)
-print(N1.validMoves)
-print(K1.validMoves)
-'''
+
+print(B1.pieceName, B1.validMoves)
+print(N1.pieceName,N1.validMoves)
+print(K1.pieceName, K1.validMoves)
+print(K2.pieceName, K2.validMoves)
+
 
 
 ''' determine if the knight and bishop are trapped
