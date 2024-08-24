@@ -40,7 +40,7 @@ class Board:
         
     def printBoard(self):
         for piece in self.pieces:
-            print(piece.pieceName, ": ", piece.currentPosition)
+            print(piece.pieceName, ": ", piece.convertToName(piece.currentPosition))
     '''
     returns true if the bishop can get from point 1 to point 2 in one move
    
@@ -240,6 +240,7 @@ class ChessPiece:
         self.pieceName = pieceName
         self.rand = rand
         self.currentPosition = self.setPosition()
+        self.validMoves = []
         
 
     def setPosition(self):
@@ -364,22 +365,19 @@ class TheirKing(ChessPiece):
         ChessPiece.__init__(self, theirKing, rand)
 
     '''
-    def getMoves(self,point):
+    def getMoves(self,board):
         validMoves = []
         for i in range(-1,2):
             for j in range(-1,2):
-                newPoint = [point[0]+i, point[1]+j]
+                newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
                 #include if move is 1 step horizontal or 1 step vertical
-                if not self.Board1.offBoard(newPoint):
                         #include if move is not off the board
-                        if (not newPoint in self.Board1.pieces[yourKing].validMoves and 
-                            not newPoint in self.Board1.pieces[bishop].validMoves and
-                            not newPoint in self.Board1.pieces[knight].validMoves and
-                            newPoint != self.currentPoint):
-                            #include if move is not next to their king and not the current position
-                            validMoves.append(newPoint)
+                if (not self.offBoard(newPoint) and
+                    newPoint != self.currentPosition):
+                        #include if move is not next to their king and not the current position
+                        validMoves.append(newPoint)
         return validMoves
-        '''
+    '''
 
 class Knight(ChessPiece):
     def __init__(self, rand):
@@ -471,7 +469,7 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 # ie. Place your bishop on g2, your knight on h8, your king on d7, and their king on g7
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
 
-'''initialize the board and pieces'''
+'''initialize the board and randomize pieces'''
 B1 = Bishop(True)
 N1 = Knight(True)
 K1 = YourKing(True) 
