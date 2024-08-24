@@ -1,8 +1,9 @@
 '''
 Author: Justin Yu
-Date: August 15, 2024
+Date: August 22, 2024
 Purpose: Checkmate with Bishop, Knight, and King
 '''
+import random
 
 #Global Variables
 knight = "knight"
@@ -11,90 +12,35 @@ yourKing = "your king"
 theirKing = "their king"
 columnLetters = "abcdefgh"
 letterDictionary = {} 
-
+min = 1
+max = 8
 
 '''
 Methods that pertain to the relation of pieces on a board
 '''
 class Board:
-    def __init__(self):
-        '''1'''
-        self.pieces = {}#1. holds chess piece objects
-        '''2'''
-        #self.recommendedMoves = {knight:[],bishop:[],yourKing:[],theirKing:[]} #2. recommended moves for each piece
-        '''3'''
-        self.min = 1#3. minimum board size
-        '''4'''
-        self.max  = 8#4. maximum board size
+    def __init__(self, B1, N1, K1, K2):
+        self.pieces = [B1, N1, K1, K2]
+
     
     '''
     updates board with the pieces, saves the board to each of those pieces, returns the pieces in a list
     '''
-   
-    def updateBoard(self, listOfPieces): 
-        for piece in listOfPieces:
-            self.pieces[piece.pieceName] = piece
-        for piece in listOfPieces:
-            piece.Board1 = self
-        return listOfPieces
     
     
-    '''
-    returns true is the coordinate point is not within the dimensions of the board
-    '''
-    def offBoard(self, point):#returns true if the point is off the board, returns false otherwise
-        if (point[0]<self.min or point[0]>self.max or point[1]<self.min or point[1]>self.max):
-            return True
-        else:
-            return False    
-
-    '''
-    calcualtes how many steps it would take a king to travel between two coordinate points
-    '''
-    def stepsBetween(self, point1, point2):#calculates the minimum number of steps between two points moving 1 square at a time
-        dx = abs(point1[0]-point2[0])
-        dy = abs(point1[1] - point2[1])
-        #the minimum is always one less than the maximum distance along an axis
-        if (dx >= dy):
-            return dx - 1
-        else:
-            return dy - 1
-
-    '''
-    returns the square's name of a coordinate point
-    '''
-    def convertToPoint(self, squareName):#can convert square's name to a coordinate point ie. a1 is [1,1]
-        point = [None]*2
-        point[0] = letterDictionary[squareName[0]]
-        point[1] = int(squareName[1])
-        return point
-
-    '''
-    returns the coordinate point of a square's name
-    '''
-    def convertToName(self, point): #can convert coordinate point to a square name ie. [1,1] is a1
-        for l in letterDictionary:
-            if (letterDictionary[l]==point[0]):
-                return (l + str(point[1]))
-            
-    '''
-    returns true when two points are 0 steps away from eachother
-    '''
-    def adjacent(self, point1, point2): #determine if any 2 points are adjacent
-        if (self.stepsBetween(point1,point2)== 0):
-            return True
-        else:
-            return False
+    def checkRandomPlacement(self):
+        listOfCurrentPositions = []
+        for piece in self.pieces:
+            while (True):
+                if piece.currentPosition not in listOfCurrentPositions:
+                    listOfCurrentPositions.append(piece.currentPosition)
+                    break
+                else:
+                    piece.currentPosition = piece.generateRandomPoint()
         
-    '''
-    returns true if two points are 1 step away from eachother
-    '''
-    def withinOneStep(self, point1, point2): #determine if any 2 points are within 1 step
-        if (self.stepsBetween(point1,point2) <= 1):
-            return True
-        else:
-            return False
-
+    def printBoard(self):
+        for piece in self.pieces:
+            print(piece.pieceName, ": ", piece.currentPosition)
     '''
     returns true if the bishop can get from point 1 to point 2 in one move
    
@@ -290,42 +236,108 @@ class Board:
 
 
 class ChessPiece:
-    def __init__(self, pieceName, Board1):
+    def __init__(self, pieceName, rand):
         self.pieceName = pieceName
-        self.Board1 = Board1
-        self.currentPoint = self.getInput()
-        self.validMoves = []
+        self.rand = rand
+        self.currentPosition = self.setPosition()
+        
 
-    def getInput(self):
+    def setPosition(self):
         repeat = True
-        while (repeat==True):
-            entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
-            repeat = False
-            if (len(entry)!=2): #check condition 1: entry is not two characters long
-                 repeat = True
-            else:
-                if (entry[0] not in columnLetters): #check condition 2: 1st character is not letter a-h
-                    repeat = True 
+        if (self.rand != True):
+            while (repeat==True):
+                entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
+                repeat = False
+                if (len(entry)!=2): #check condition 1: entry is not two characters long
+                    repeat = True
                 else:
-                    try: #check condition 3: 2nd character is not integer
-                        int(entry[1])
-                    except:
-                        repeat=True
-                    if (repeat == False):
-                        if (int(entry[1])>Board1.max and int(entry[1])<Board1.min):#check condition 4: 2nd character is not in range of 1-8
+                    if (entry[0] not in columnLetters): #check condition 2: 1st character is not letter a-h
+                        repeat = True 
+                    else:
+                        try: #check condition 3: 2nd character is not integer
+                            int(entry[1])
+                        except:
                             repeat=True
-            if (repeat == True):#at least one condition failed, retry
-                print("Sorry that is an invalid entry. Please try again.")
-        return self.Board1.convertToPoint(entry)
+                        if (repeat == False):
+                            if (int(entry[1])>max and int(entry[1])<min):#check condition 4: 2nd character is not in range of 1-8
+                                repeat=True
+                if (repeat == True):#at least one condition failed, retry
+                    print("Sorry that is an invalid entry. Please try again.")
+            return self.convertToPoint(entry)
+        else:
+            return self.generateRandomPoint()
     
+    def generateRandomPoint(self):
+        x = random.randint(min, max)
+        y = random.randint(min, max)
+        point = [x,y]
+        return point
     
+    def offBoard(self, point):#returns true if the point is off the board, returns false otherwise
+        if (point[0]<min or point[0]>max or point[1]<min or point[1]>max):
+            return True
+        else:
+            return False 
+        
 
+    '''
+    returns true is the coordinate point is not within the dimensions of the board
+    '''
+       
+
+    '''
+    calcualtes how many steps it would take a king to travel between two coordinate points
+    '''
+    def stepsBetween(self, point1, point2):#calculates the minimum number of steps between two points moving 1 square at a time
+        dx = abs(point1[0]-point2[0])
+        dy = abs(point1[1] - point2[1])
+        #the minimum is always one less than the maximum distance along an axis
+        if (dx >= dy):
+            return dx - 1
+        else:
+            return dy - 1
+
+    '''
+    returns the square's name of a coordinate point
+    '''
+    def convertToPoint(self, squareName):#can convert square's name to a coordinate point ie. a1 is [1,1]
+        point = [None]*2
+        point[0] = letterDictionary[squareName[0]]
+        point[1] = int(squareName[1])
+        return point
+
+    '''
+    returns the coordinate point of a square's name
+    '''
+    def convertToName(self, point): #can convert coordinate point to a square name ie. [1,1] is a1
+        for l in letterDictionary:
+            if (letterDictionary[l]==point[0]):
+                return (l + str(point[1]))
+            
+    '''
+    returns true when two points are 0 steps away from eachother
+    '''
+    def adjacent(self, point1, point2): #determine if any 2 points are adjacent
+        if (self.stepsBetween(point1,point2)== 0):
+            return True
+        else:
+            return False
+        
+    '''
+    returns true if two points are 1 step away from eachother
+    '''
+    def withinOneStep(self, point1, point2): #determine if any 2 points are within 1 step
+        if (self.stepsBetween(point1,point2) <= 1):
+            return True
+        else:
+            return False
 
 
 class YourKing(ChessPiece):
-    def __init__(self, Board1):
-        ChessPiece.__init__(self, yourKing, Board1)
+    def __init__(self, rand):
+        ChessPiece.__init__(self, yourKing, rand)
 
+    '''
     def getMoves(self,point, capture):
         validMoves = []
         for i in range(-1,2):
@@ -345,13 +357,14 @@ class YourKing(ChessPiece):
                                     #include if move when is not on another piece
                                     validMoves.append(newPoint) 
         return validMoves
-
+        '''
 
 class TheirKing(ChessPiece):
-    def __init__(self, Board1):
-        ChessPiece.__init__(self, theirKing, Board1)
+    def __init__(self, rand):
+        ChessPiece.__init__(self, theirKing, rand)
 
-    def getMoves(self,point, capture):
+    '''
+    def getMoves(self,point):
         validMoves = []
         for i in range(-1,2):
             for j in range(-1,2):
@@ -366,12 +379,13 @@ class TheirKing(ChessPiece):
                             #include if move is not next to their king and not the current position
                             validMoves.append(newPoint)
         return validMoves
-
+        '''
 
 class Knight(ChessPiece):
-    def __init__(self, Board1):
-        ChessPiece.__init__(self, knight, Board1)
+    def __init__(self, rand):
+        ChessPiece.__init__(self, knight, rand)
     
+    '''
     def getMoves(self, point, capture):
         validMoves = []
         for i in range(-1,2,2):
@@ -400,13 +414,13 @@ class Knight(ChessPiece):
                             validMoves.append(newPoint2)
 
         return validMoves
-
-
+        '''
 
 class Bishop(ChessPiece):
-    def __init__(self, Board1):
-        ChessPiece.__init__(self, bishop, Board1)
+    def __init__(self, rand):
+        ChessPiece.__init__(self, bishop, rand)
     
+    '''
     def getMoves(self, point, capture):
         validMoves = []
         for x in range(-1,2,2):
@@ -431,7 +445,7 @@ class Bishop(ChessPiece):
                         #stop finding moves when move is off the board
                         stop = True
         return validMoves
-
+        '''
 
 
 
@@ -458,14 +472,15 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
 
 '''initialize the board and pieces'''
-Board1 = Board() 
-B1 = Bishop(Board1)
-N1 = Knight(Board1)
-K1 = YourKing(Board1) 
-K2 = TheirKing(Board1) 
-B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
+B1 = Bishop(True)
+N1 = Knight(True)
+K1 = YourKing(True) 
+K2 = TheirKing(True) 
+Board1 = Board(B1, N1, K1, K2) 
+Board1.checkRandomPlacement()
+Board1.printBoard()
 
-'''get a list of moves given the current piece position, save those moves in the property of the piece'''
+'''get a list of moves given the current piece position, save those moves in the property of the piece
 B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
 N1.validMoves = N1.getMoves(N1.currentPoint, capture=False)
 K1.validMoves = K1.getMoves(K1.currentPoint, capture = False)
@@ -473,11 +488,16 @@ K2.validMoves = K2.getMoves(K2.currentPoint, capture = False)
 B1,N1,K1,K2 = Board1.updateBoard([B1,N1,K1,K2]) 
 
 
-print(B1.pieceName, B1.validMoves)
-print(N1.pieceName,N1.validMoves)
-print(K1.pieceName, K1.validMoves)
-print(K2.pieceName, K2.validMoves)
+print(B1.pieceName, B1.currentPoint)
+print(N1.pieceName, N1.currentPoint)
+print(K1.pieceName, K1.currentPoint)
+print(K2.pieceName, K2.currentPoint)
 
+print(B1.pieceName, "next moves", B1.validMoves)
+print(N1.pieceName, "next moves", N1.validMoves)
+print(K1.pieceName, "next moves", K1.validMoves)
+print(K2.pieceName, "next moves", K2.validMoves)
+'''
 
 
 ''' determine if the knight and bishop are trapped
