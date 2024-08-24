@@ -12,6 +12,9 @@ yourKing = "your king"
 theirKing = "their king"
 columnLetters = "abcdefgh"
 letterDictionary = {} 
+prompt = "prompt"
+preset = "preset"
+rand = "random"
 min = 1
 max = 8
 
@@ -21,12 +24,16 @@ Methods that pertain to the relation of pieces on a board
 class Board:
     def __init__(self, B1, N1, K1, K2):
         self.pieces = [B1, N1, K1, K2]
-
+        self.yourPieces = [B1, N1, K1]
+        self.theirPieces = K2
+        self.occupiedSquares = []
     
     '''
     updates board with the pieces, saves the board to each of those pieces, returns the pieces in a list
     '''
-    
+    def updateOccupiedSquares(self):
+        for p in self.pieces:
+            self.occupiedSquares.append(p.currentPosition)
     
     def checkRandomPlacement(self):
         listOfCurrentPositions = []
@@ -36,11 +43,30 @@ class Board:
                     listOfCurrentPositions.append(piece.currentPosition)
                     break
                 else:
-                    piece.currentPosition = piece.generateRandomPoint()
-        
+                    piece.currentPosition = piece.generateRandomPoint()  
+
     def printBoard(self):
         for piece in self.pieces:
-            print(piece.pieceName, ": ", piece.convertToName(piece.currentPosition))
+            print(piece.pieceName, ": ", self.convertToName(piece.currentPosition))
+        print("Occupied Squares", self.convertToName(self.occupiedSquares))
+
+
+    '''
+    returns the coordinate point of a square's name
+    '''
+    def convertToName(self, points): #can convert coordinate point to a square name ie. [1,1] is a1
+        if (type(points[0])==int):
+            for l in letterDictionary:
+                if (letterDictionary[l]==points[0]):
+                    return (l + str(points[1]))
+        else:
+            namedPoints = []
+            for p in points:
+                for l in letterDictionary:
+                    if (letterDictionary[l]==p[0]):
+                        namedPoints.append(l + str(p[1]))
+            return namedPoints
+            
     '''
     returns true if the bishop can get from point 1 to point 2 in one move
    
@@ -236,16 +262,16 @@ class Board:
 
 
 class ChessPiece:
-    def __init__(self, pieceName, rand):
+    def __init__(self, pieceName, option, point):
         self.pieceName = pieceName
-        self.rand = rand
-        self.currentPosition = self.setPosition()
+        self.option = option
+        self.currentPosition = self.setPosition(point)
         self.validMoves = []
         
 
-    def setPosition(self):
+    def setPosition(self, point):
         repeat = True
-        if (self.rand != True):
+        if (self.option == prompt):
             while (repeat==True):
                 entry = input("What square is %s on (ie. a1)? \n"%(self.pieceName)).rstrip().lstrip().lower() #get user input using piece name and ownership
                 repeat = False
@@ -265,6 +291,8 @@ class ChessPiece:
                 if (repeat == True):#at least one condition failed, retry
                     print("Sorry that is an invalid entry. Please try again.")
             return self.convertToPoint(entry)
+        elif (self.option == preset):
+            return point
         else:
             return self.generateRandomPoint()
     
@@ -307,13 +335,6 @@ class ChessPiece:
         point[1] = int(squareName[1])
         return point
 
-    '''
-    returns the coordinate point of a square's name
-    '''
-    def convertToName(self, point): #can convert coordinate point to a square name ie. [1,1] is a1
-        for l in letterDictionary:
-            if (letterDictionary[l]==point[0]):
-                return (l + str(point[1]))
             
     '''
     returns true when two points are 0 steps away from eachother
@@ -334,56 +355,51 @@ class ChessPiece:
             return False
 
 
+
+
 class YourKing(ChessPiece):
-    def __init__(self, rand):
-        ChessPiece.__init__(self, yourKing, rand)
+    def __init__(self, option, point):
+        ChessPiece.__init__(self, yourKing, option, point)
 
     '''
-    def getMoves(self,point, capture):
-        validMoves = []
-        for i in range(-1,2):
-            for j in range(-1,2):
-                newPoint = [point[0]+i, point[1]+j]
-                #include if move is 1 step horizontal or 1 step vertical
-                if not self.Board1.offBoard(newPoint):
-                        #include if move is not off the board
-                        if (not self.Board1.adjacent(newPoint, self.Board1.pieces[theirKing].currentPoint)
-                            and newPoint != self.currentPoint):
-                            #include if move is not next to their king and not the current position
-                            if (capture):
-                                validMoves.append(newPoint)
-                            else:
-                                if ((newPoint !=self.Board1.pieces[bishop].currentPoint) 
-                                    and (newPoint!=self.Board1.pieces[knight].currentPoint)):
-                                    #include if move when is not on another piece
-                                    validMoves.append(newPoint) 
-        return validMoves
-        '''
-
-class TheirKing(ChessPiece):
-    def __init__(self, rand):
-        ChessPiece.__init__(self, theirKing, rand)
-
-    '''
+    #can operate on boards with future configurations
     def getMoves(self,board):
         validMoves = []
         for i in range(-1,2):
             for j in range(-1,2):
                 newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
-                #include if move is 1 step horizontal or 1 step vertical
-                        #include if move is not off the board
-                if (not self.offBoard(newPoint) and
-                    newPoint != self.currentPosition):
+                #cannot be off board, adjacent to other king, or on top of another piece
+                if (not self.offBoard(newPoint)):
+                    valid = True
+                    for piece in board.yourPieces:
+                        if newPoint in piece.currentPosition:
+                            valid = False
+                    if (valid == True):
+                        validMoves.append(newPoint) 
+        self.validMoves = validMoves
+    '''
+class TheirKing(ChessPiece):
+    def __init__(self, option, point):
+        ChessPiece.__init__(self, theirKing, option, point)
+    '''
+    #can operate on boards with future configurations
+    def getMoves(self,board):
+        validMoves = []
+        for i in range(-1,2):
+            for j in range(-1,2):
+                newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
+                #cannot be off board, on a guarded square, or adjacent to other king
+                if (not self.offBoard(newPoint)):
                         #include if move is not next to their king and not the current position
                         validMoves.append(newPoint)
         return validMoves
     '''
-
 class Knight(ChessPiece):
-    def __init__(self, rand):
-        ChessPiece.__init__(self, knight, rand)
+    def __init__(self, option, point):
+        ChessPiece.__init__(self, knight, option, point)
     
     '''
+    #can operate on boards with future configurations
     def getMoves(self, point, capture):
         validMoves = []
         for i in range(-1,2,2):
@@ -391,34 +407,22 @@ class Knight(ChessPiece):
                 #include if move is 1 square horizontal and 2 squares vertical
                 newPoint1 = [point[0]+i, point[1]+j] 
                 if (not self.Board1.offBoard(newPoint1)):
-                    #include if move is not off the board
-                    if (capture):
-                        validMoves.append(newPoint1)
-                    else:
-                        if ((newPoint1 != self.Board1.pieces[yourKing].currentPoint)  
-                            and (newPoint1 != self.Board1.pieces[bishop].currentPoint)): 
-                            #include if move is not on one of your pieces
-                            validMoves.append(newPoint1)
-                #include if move is 2 squares horizontal and 1 square vertical
+                    #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
+                    validMoves.append(newPoint1)
                 newPoint2 = [point[0]+j, point[1]+i]
                 if (not self.Board1.offBoard(newPoint2)):
-                    #include if the move is not off the board
+                    #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
                     if (capture):
                         validMoves.append(newPoint2)
-                    else:
-                        if ((newPoint2 != self.Board1.pieces[yourKing].currentPoint) and 
-                            (newPoint2 != self.Board1.pieces[bishop].currentPoint)): 
-                            #include if move is not on one of your pieces
-                            validMoves.append(newPoint2)
-
         return validMoves
-        '''
-
+    '''
+ 
 class Bishop(ChessPiece):
-    def __init__(self, rand):
-        ChessPiece.__init__(self, bishop, rand)
+    def __init__(self, option, point):
+        ChessPiece.__init__(self, bishop, option, point)
     
     '''
+    #can operate on boards with future configurations
     def getMoves(self, point, capture):
         validMoves = []
         for x in range(-1,2,2):
@@ -429,21 +433,10 @@ class Bishop(ChessPiece):
                     #only include move if it is 1 step vertical and 1 step horizontal
                     newPoint = [point[0]+ x * i, point[1]+ y * i] 
                     if not Board1.offBoard(newPoint):
-                        if ((newPoint != self.Board1.pieces[yourKing].currentPoint) 
-                            and (newPoint != self.Board1.pieces[knight].currentPoint)):
-                            #only include move if it is not on one of your pieces
-                            validMoves.append(newPoint)
-                            i+=1
-                        else:
-                            #stop finding moves when move lands on one of your pieces
-                            stop = True
-                            if (capture):
-                                validMoves.append(newPoint)
-                    else:
-                        #stop finding moves when move is off the board
-                        stop = True
+                    #cannot be off board, current square, on unguarded square adjacent to other king, or on top of another piece   
+                        validMoves.append(newPoint)
         return validMoves
-        '''
+    '''
 
 
 
@@ -470,12 +463,13 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
 
 '''initialize the board and randomize pieces'''
-B1 = Bishop(True)
-N1 = Knight(True)
-K1 = YourKing(True) 
-K2 = TheirKing(True) 
+B1 = Bishop(random, 0)
+N1 = Knight(random, 0)
+K1 = YourKing(random, 0) 
+K2 = TheirKing(random, 0) 
 Board1 = Board(B1, N1, K1, K2) 
 Board1.checkRandomPlacement()
+Board1.updateOccupiedSquares()
 Board1.printBoard()
 
 '''get a list of moves given the current piece position, save those moves in the property of the piece
