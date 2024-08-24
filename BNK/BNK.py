@@ -47,7 +47,7 @@ class Board:
                     piece.currentPosition = generateRandomPoint()  
         #the two kings are not adjacent to eachother
         if adjacent(self.kingPieces[0].currentPosition, self.kingPieces[1].currentPosition):
-            listOfCurrentPositions.pop(self.kingPieces[1].currentPosition)
+            listOfCurrentPositions.remove(self.kingPieces[1])
             listOfCurrentPositions += self.kingPieces[0].validMoves
             while (True):
                 self.kingPieces[1].currentPosition = generateRandomPoint()  
@@ -311,14 +311,10 @@ class ChessPiece:
             return False
     '''
 
+class King(ChessPiece):
+    def __init__(self, name, option, point):
+        ChessPiece.__init__(self, name, option, point)
 
-
-class YourKing(ChessPiece):
-    def __init__(self, option, point):
-        ChessPiece.__init__(self, yourKing, option, point)
-
-    
-    #can operate on boards with future configurations
     def getMoves(self,board):
         validMoves = []
         for i in range(-1,2):
@@ -326,26 +322,21 @@ class YourKing(ChessPiece):
                 newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
                 #cannot be off board, adjacent to other king, or on top of another piece
                 if (not offBoard(newPoint) and
-                    not newPoint in board.occupiedSquares):
+                    not newPoint in board.occupiedSquares and
+                    not (adjacent(newPoint, board.kingPieces[0].currentPosition) and adjacent(newPoint, board.kingPieces[1].currentPosition))):
                     validMoves.append(newPoint) 
         self.validMoves = validMoves
-    
-class TheirKing(ChessPiece):
+
+class YourKing(King):
     def __init__(self, option, point):
-        ChessPiece.__init__(self, theirKing, option, point)
-    '''
-    #can operate on boards with future configurations
-    def getMoves(self,board):
-        validMoves = []
-        for i in range(-1,2):
-            for j in range(-1,2):
-                newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
-                #cannot be off board, on a guarded square, or adjacent to other king
-                if (not self.offBoard(newPoint)):
-                        #include if move is not next to their king and not the current position
-                        validMoves.append(newPoint)
-        return validMoves
-    '''
+        King.__init__(self, yourKing, option, point)
+
+    
+class TheirKing(King):
+    def __init__(self, option, point):
+        King.__init__(self, theirKing, option, point)
+
+    
 class Knight(ChessPiece):
     def __init__(self, option, point):
         ChessPiece.__init__(self, knight, option, point)
@@ -488,6 +479,8 @@ B1.getMoves(Board1)
 B1.printValidMoves()
 N1.getMoves(Board1)
 N1.printValidMoves()
+K2.getMoves(Board1)
+K2.printValidMoves()
 
 '''get a list of moves given the current piece position, save those moves in the property of the piece
 B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
