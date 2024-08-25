@@ -1,6 +1,6 @@
 '''
 Author: Justin Yu
-Date: August 22, 2024
+Date: August 25, 2024
 Purpose: Checkmate with Bishop, Knight, and King
 '''
 import random
@@ -24,36 +24,40 @@ Methods that pertain to the relation of pieces on a board
 class Board:
     def __init__(self, B1, N1, K1, K2):
         self.pieces = [B1, N1, K1, K2]
-        self.otherPieces = [B1, N1]
-        self.kingPieces = [K1, K2]
         self.occupiedSquares = []
+        self.guardedSquares = []
     
     '''
     updates board with the pieces, saves the board to each of those pieces, returns the pieces in a list
     '''
     def updateOccupiedSquares(self):
+        o = []
         for p in self.pieces:
-            self.occupiedSquares.append(p.currentPosition)
+            o.append(p.currentPosition)
+        self.occupiedSquares = o
     
     def checkRandomPlacement(self):
-        listOfCurrentPositions = []
-        #no piece is on top of another piece
+        listOfPositions = []
+        #create a list to hold unique piece positions
         for piece in self.pieces:
             while (True):
-                if piece.currentPosition not in listOfCurrentPositions:
-                    listOfCurrentPositions.append(piece.currentPosition)
+                if piece.currentPosition not in listOfPositions:
+                    listOfPositions.append(piece.currentPosition)
                     break
                 else:
                     piece.currentPosition = generateRandomPoint()  
-        #the two kings are not adjacent to eachother
-        if adjacent(self.kingPieces[0].currentPosition, self.kingPieces[1].currentPosition):
-            listOfCurrentPositions.remove(self.kingPieces[1])
-            listOfCurrentPositions += self.kingPieces[0].validMoves
-            while (True):
-                self.kingPieces[1].currentPosition = generateRandomPoint()  
-                if (self.kingPieces[1].currentPosition not in listOfCurrentPositions):
-                    break
+        self.updateOccupiedSquares()
 
+        #update the list above to include the valid moves for all user pieces
+        for i in range(3):
+            listOfPositions = listOfPositions + self.pieces[i].validMoves
+            while (True):
+                self.pieces[3].currentPosition = generateRandomPoint()  
+                #ensures the king spawns on non-guarded square
+                if (self.pieces[3].currentPosition not in listOfPositions):
+                    break
+        
+    
     def printBoard(self):
         for piece in self.pieces:
             print(piece.pieceName, ": ", convertToName(piece.currentPosition))
@@ -321,10 +325,10 @@ class King(ChessPiece):
             for j in range(-1,2):
                 newPoint = [self.currentPosition[0]+i, self.currentPosition[1]+j]
                 #cannot be off board, adjacent to other king, or on top of another piece
-                if (not offBoard(newPoint) and
-                    not newPoint in board.occupiedSquares and
-                    not (adjacent(newPoint, board.kingPieces[0].currentPosition) and adjacent(newPoint, board.kingPieces[1].currentPosition))):
-                    validMoves.append(newPoint) 
+                if (not offBoard(newPoint)):
+                    if (not newPoint in board.occupiedSquares):
+                        if (not (adjacent(newPoint, board.pieces[-1].currentPosition) and adjacent(newPoint, board.pieces[-2].currentPosition))):
+                            validMoves.append(newPoint) 
         self.validMoves = validMoves
 
 class YourKing(King):
@@ -349,13 +353,16 @@ class Knight(ChessPiece):
             for j in range(-2,3,4): 
                 #include if move is 1 square horizontal and 2 squares vertical
                 newPoint1 = [self.currentPosition[0]+i, self.currentPosition[1]+j] 
-                if (not offBoard(newPoint1) and newPoint1 not in board.occupiedSquares):
-                    #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
-                    validMoves.append(newPoint1)
+                if (not offBoard(newPoint1)):
+                    if (newPoint1 not in board.occupiedSquares):
+                        #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
+                        validMoves.append(newPoint1)
+                
                 newPoint2 = [self.currentPosition[0]+j, self.currentPosition[1]+i]
-                if (not offBoard(newPoint2) and newPoint2 not in board.occupiedSquares):
-                    #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
-                    validMoves.append(newPoint2)
+                if (not offBoard(newPoint2)):
+                    if (newPoint2 not in board.occupiedSquares):
+                        #cannot be current square, off board, on an unguarded square and adjacent to other king, or ontop of its another piece
+                        validMoves.append(newPoint2)
         self.validMoves = validMoves
     
  
@@ -372,7 +379,7 @@ class Bishop(ChessPiece):
                 while(True):
                     #only include move if it is 1 step vertical and 1 step horizontal
                     newPoint = [self.currentPosition[0]+ x * i, self.currentPosition[1]+ y * i] 
-                    if not offBoard(newPoint):
+                    if (not offBoard(newPoint)):
                     #cannot be off board, on unguarded square adjacent to other king, or on top of another piece   
                         if newPoint not in board.occupiedSquares:
                             validMoves.append(newPoint)
@@ -447,6 +454,14 @@ def convertToName(points): #can convert coordinate point to a square name ie. [1
                         namedPoints.append(l + str(p[1]))
         return namedPoints
 
+#returns a list of all the guarded squares
+def getGuardedSquares(B1, N1, K1):
+    guardedSquares = []
+    guardedSquares = guardedSquares + B1.validMoves + N1.validMoves + K1.validMoves
+    return guardedSquares
+
+
+
 '''initialize game state variables'''
 gameOver = True
 win = False
@@ -465,14 +480,17 @@ for c in columnLetters:#populate the dictionary that maps letter columns to numb
 # ie. Place your bishop on b3, your knight on e5, your king on d7, and their king on d4
 
 '''initialize the board and randomize pieces'''
-B1 = Bishop(random, 0)
-N1 = Knight(random, 0)
-K1 = YourKing(random, [2,4]) 
-K2 = TheirKing(random, [2,4]) 
+# test check random placement function by initializing all same positions
+B1 = Bishop(rand, [2,4])
+N1 = Knight(rand, [2,4])
+K1 = YourKing(rand, [2,4]) 
+K2 = TheirKing(rand, [2,4]) 
 Board1 = Board(B1, N1, K1, K2) 
+#print the board configuration
 Board1.checkRandomPlacement()
 Board1.updateOccupiedSquares()
 Board1.printBoard()
+#print the valid moves of the pieces
 K1.getMoves(Board1)
 K1.printValidMoves()
 B1.getMoves(Board1)
