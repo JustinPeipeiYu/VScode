@@ -37,31 +37,40 @@ class Board:
         self.occupiedSquares = o
     
     def checkRandomPlacement(self):
+        #create a list to hold unique occupied positions
         listOfPositions = []
-        #create a list to hold unique piece positions
         for piece in self.pieces:
             while (True):
+                #check that each piece's position does not match a previous position
                 if piece.currentPosition not in listOfPositions:
                     listOfPositions.append(piece.currentPosition)
                     break
                 else:
+                    #generate a new position if the position already exists
                     piece.currentPosition = generateRandomPoint()  
-        self.updateOccupiedSquares()
 
-        #update the list above to include the valid moves for all user pieces
-        for i in range(3):
-            listOfPositions = listOfPositions + self.pieces[i].validMoves
-            while (True):
+        #update the positions to include all user's pieces' valid moves as well as occupied positions
+        self.getGuardedSquares()
+        listOfPositions += self.guardedSquares
+        #loop until we return a position that is not in the list
+        while (True):
+            if (self.pieces[3].currentPosition in listOfPositions):
                 self.pieces[3].currentPosition = generateRandomPoint()  
-                #ensures the king spawns on non-guarded square
-                if (self.pieces[3].currentPosition not in listOfPositions):
-                    break
+            else:
+                break
+        self.updateOccupiedSquares()
         
-    
+    def getGuardedSquares(self):
+        guardedSquares = []
+        for i in range(3):
+            guardedSquares = guardedSquares + self.pieces[i].validMoves
+        self.guardedSquares = guardedSquares
+
     def printBoard(self):
         for piece in self.pieces:
             print(piece.pieceName, ": ", convertToName(piece.currentPosition))
         print("Occupied Squares", convertToName(self.occupiedSquares))
+        print("Guarded Squares", convertToName(self.guardedSquares))
 
             
     '''
@@ -486,19 +495,19 @@ N1 = Knight(rand, [2,4])
 K1 = YourKing(rand, [2,4]) 
 K2 = TheirKing(rand, [2,4]) 
 Board1 = Board(B1, N1, K1, K2) 
-#print the board configuration
-Board1.checkRandomPlacement()
-Board1.updateOccupiedSquares()
-Board1.printBoard()
-#print the valid moves of the pieces
-K1.getMoves(Board1)
-K1.printValidMoves()
+#get valid moves for each piece
 B1.getMoves(Board1)
-B1.printValidMoves()
 N1.getMoves(Board1)
-N1.printValidMoves()
+K1.getMoves(Board1)
 K2.getMoves(Board1)
+Board1.checkRandomPlacement()
+#print configuration
+Board1.printBoard()
+K1.printValidMoves()
+B1.printValidMoves()
+N1.printValidMoves()
 K2.printValidMoves()
+
 
 '''get a list of moves given the current piece position, save those moves in the property of the piece
 B1.validMoves = B1.getMoves(B1.currentPoint, capture = False)
