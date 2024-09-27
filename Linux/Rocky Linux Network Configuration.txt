@@ -1,5 +1,5 @@
 #open network config file
-ifconfig -all
+netstat -i
 sudo nano /etc/sysconfig/network-scripts/ifcfg-your_interface_name
 
 #update settings
