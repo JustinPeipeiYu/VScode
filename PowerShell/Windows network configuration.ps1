@@ -1,3 +1,4 @@
+Get-NetIPInterface
 New-NetIPAddress 
 -InterfaceAlias Ethernet0 
 -AddressFamily IPv4 
