@@ -1,0 +1,8 @@
+:edit #create/edit
+:wq #save and quit
+:q! #quit without save
+y #copy
+d #cut 
+p #paste
+u #undo
+CTRL + R #redo
