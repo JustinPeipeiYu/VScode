@@ -1,0 +1,2 @@
+find /home -type f -mtime -1 -daystart  #find all files modified today in home directory
+find /home -type f -atime -1 -daystart  #find all files accessed today in home directory
