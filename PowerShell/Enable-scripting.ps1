@@ -1,0 +1,2 @@
+Set-ExectuionPolicy unrestricted
+Get-ExecutionPolicy
