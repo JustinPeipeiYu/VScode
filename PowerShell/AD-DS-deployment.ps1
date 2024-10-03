@@ -1,7 +1,7 @@
 #
 # Windows PowerShell script for AD DS Deployment
 #
-
+install-windowsfeature AD-Domain-Services
 Import-Module ADDSDeployment
 Install-ADDSForest 
 -CreateDnsDelegation:$false 
