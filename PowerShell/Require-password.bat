@@ -1,1 +1,1 @@
-net  user Username  \requirepassword:ye
+net  user Administrator  \requirepassword:yes
