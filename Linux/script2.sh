@@ -1,5 +1,4 @@
-# creates a new user
-# gives new user login password
+# creates new users
 # adds user to root group to give it administrator access
 #! /bin/bash
 useradd jane
