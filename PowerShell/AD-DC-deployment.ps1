@@ -12,8 +12,8 @@ Install-ADDSForest
 -CreateDnsDelegation:$false 
 -DatabasePath "C:\Windows\NTDS"
 -DomainMode "WinThreshold" 
--DomainName "2375labs.local" 
--DomainNetbiosName "2375LABS" 
+-DomainName "INFO2255-jyu4340.local" 
+-DomainNetbiosName "INFO2255-jyu4340" 
 -ForestMode "WinThreshold" 
 -InstallDns:$true 
 -LogPath "C:\Windows\NTDS" 
