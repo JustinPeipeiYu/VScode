@@ -1,0 +1,1 @@
+Set-Disk -Number 5 -IsOffline $False
