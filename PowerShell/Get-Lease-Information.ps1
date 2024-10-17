@@ -1,0 +1,1 @@
+Get-DhcpServerv4Lease -ComputerName "Test2-jyu4340-D" -ScopeId 10.180.117.0 -AllLeases
