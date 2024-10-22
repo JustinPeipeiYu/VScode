@@ -1,1 +1,2 @@
+# -e is the flag for indicating the pattern you want to match against
 grep -e 'T*' -e ' t*' /home/justin/files1a/rhymes/nursery #find all the lines that start with letter T or t in nursery
