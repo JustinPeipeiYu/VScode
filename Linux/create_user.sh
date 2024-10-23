@@ -1,6 +1,6 @@
 # creates new users
 # adds user to root group to give it administrator access
 #! /bin/bash
-useradd jane
-sudo passwd
+useradd -m jane
+sudo passwd jane
 sudo usermod -aG root jane
