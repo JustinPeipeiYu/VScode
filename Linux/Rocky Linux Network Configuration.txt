@@ -1,5 +1,7 @@
 #open network config file
 netstat -i
+ip address show
+if config
 sudo nano /etc/sysconfig/network-scripts/ifcfg-your_interface_name
 
 #update settings
