@@ -1,0 +1,1 @@
+WMIC USERACCOUNT WHERE Name='username' SET PasswordExpires=FALSE
