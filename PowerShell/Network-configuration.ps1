@@ -13,3 +13,5 @@ Set-DnsClientServerAddress
 -ServerAddresses 10.180.117.7
 Remove-NetIPAddress
 -InterfaceIndex 4
+Remove-NetRoute -InterfaceIndex 4 -DestinationPrefix "0.0.0.0/0" -NextHop 10.180.117.1
+New-NetRoute -InterfaceIndex 4 -DestinationPrefix "0.0.0.0/0" -NextHop 10.180.117.1
