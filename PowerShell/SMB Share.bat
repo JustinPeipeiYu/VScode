@@ -1,0 +1,1 @@
+net share DataShare=S:\Data1 /grant:Everyone,full /users:50 /unlimited /remark:"" /cache:none
