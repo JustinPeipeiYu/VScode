@@ -1,1 +1,3 @@
-WMIC USERACCOUNT WHERE Name='username' SET PasswordExpires=FALSE
+WMIC USERACCOUNT WHERE Name="administrator" SET PasswordExpires=True
+net accounts /maxpwage: 30
+net user "administrator"
