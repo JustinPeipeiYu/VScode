@@ -11,3 +11,5 @@ Rename-NetAdapter
 Set-DnsClientServerAddress
 -InterfaceIndex 4
 -ServerAddresses 10.180.117.7
+Remove-NetIPAddress
+-InterfaceIndex 4
