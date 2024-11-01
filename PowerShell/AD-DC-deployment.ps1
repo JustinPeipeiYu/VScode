@@ -3,6 +3,8 @@
 #
 Install-WindowsFeature AD-Domain-Services
 Add-WindowsCapability -Name rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 -Online
+
+#Install and remove active directory domain services
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
 Remove-WindowsFeature AD-Domain-Services -IncludeManagementTools
 
