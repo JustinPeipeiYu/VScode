@@ -33,5 +33,8 @@ Install-ADDSForest
 -SysvolPath "C:\Windows\SYSVOL" 
 -Force:$true
 
+#remove Domain Controller 
+Uninstall-ADDSDomainController -ForceRemoval -DemoteOperationMasterRole
+
 #verify active directory domain controller was installed
 Get-ADDomain
