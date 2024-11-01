@@ -36,5 +36,9 @@ Install-ADDSForest
 #remove Domain Controller 
 Uninstall-ADDSDomainController -ForceRemoval -DemoteOperationMasterRole
 
+#check functional levels (domain must not be lower than forest)
+Get-ADDomain | fl Name,Mode
+Get-ADForest | fl Name,Mode
+
 #verify active directory domain controller was installed
 Get-ADDomain
