@@ -4,12 +4,18 @@
 Install-WindowsFeature AD-Domain-Services
 Add-WindowsCapability -Name rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 -Online
 
-#Install and remove active directory domain services
+#Install and remove active directory domain services, DNS
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
 Remove-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Install-WindowsFeature DNS -IncludeManagementTools
+Remove-WindowsFeature DNS -IncludeManagementTools
 
-Install-WindowsFeature DNS
+#display server roles 
+Get-WindowsFeature
+
 Install-WindowsFeature RSAT-AD-Tools
+
+
 #
 # Windows PowerShell script for Domain Controller Deployment
 #
