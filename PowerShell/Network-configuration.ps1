@@ -23,5 +23,6 @@ Set-DnsClientServerAddress
 -InterfaceIndex 4
 -ResetServerAddresses
 
+#add and remove default gateway
 Remove-NetRoute -InterfaceIndex 4 -DestinationPrefix "0.0.0.0/0" -NextHop 10.180.117.1
 New-NetRoute -InterfaceIndex 4 -DestinationPrefix "0.0.0.0/0" -NextHop 10.180.117.1
