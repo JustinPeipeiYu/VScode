@@ -11,6 +11,9 @@ Rename-NetAdapter
 Set-DnsClientServerAddress
 -InterfaceIndex 4
 -ServerAddresses 10.180.117.7
+Set-DnsClientServerAddress
+-InterfaceIndex 4
+-ResetServerAddresses
 Remove-NetIPAddress
 -InterfaceIndex 4
 Remove-NetRoute -InterfaceIndex 4 -DestinationPrefix "0.0.0.0/0" -NextHop 10.180.117.1
