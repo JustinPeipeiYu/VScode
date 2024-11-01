@@ -32,3 +32,6 @@ Install-ADDSForest
 -NoRebootOnCompletion:$false 
 -SysvolPath "C:\Windows\SYSVOL" 
 -Force:$true
+
+#verify active directory domain controller was installed
+Get-ADDomain
