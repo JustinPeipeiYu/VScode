@@ -10,7 +10,7 @@ Remove-WindowsFeature AD-Domain-Services -IncludeManagementTools
 Install-WindowsFeature DNS -IncludeManagementTools
 Remove-WindowsFeature DNS -IncludeManagementTools
 
-#display server roles 
+#display server roles including RSAT management tools
 Get-WindowsFeature
 
 Install-WindowsFeature RSAT-AD-Tools
