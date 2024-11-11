@@ -1,0 +1,1 @@
+setfacl -d -m u:dummy:rw test
