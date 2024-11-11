@@ -1,0 +1,1 @@
+New-SmbShare -Name "Data" -Path "J:\Data" -EncryptData $True
