@@ -1,2 +1,2 @@
-New-SmbShare -Name "Data" -Path "J:\Data" -EncryptData $True
+New-SmbShare -Name "Data" -Path "J:\Data" -FullAccess "Everyone"
 Remove-SmbShare -Name "Data"
