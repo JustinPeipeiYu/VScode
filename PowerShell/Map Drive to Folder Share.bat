@@ -1,0 +1,1 @@
+net use T:\\A12275-4340-02\Data3 /user:domain\username password /persistent:yes
