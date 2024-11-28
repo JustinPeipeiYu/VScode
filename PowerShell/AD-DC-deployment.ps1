@@ -11,7 +11,7 @@ Install-WindowsFeature DNS -IncludeManagementTools
 Remove-WindowsFeature DNS -IncludeManagementTools
 
 #display server roles including RSAT management tools
-Get-WindowsFeature
+Get-WindowsFeature | Where-Object installed -like install
 
 Install-WindowsFeature RSAT-AD-Tools
 
