@@ -1,1 +1,0 @@
-Set-LocalUser -Name "username" -Password (ConvertTo-SecureString -AsPlainText "AxW-e!&.BZv*7aT" -Force) -PasswordNeverExpires $true
