@@ -4,14 +4,13 @@ ip address show
 if config
 sudo nano /etc/sysconfig/network-scripts/ifcfg-your_interface_name
 
-#update settings
+#minimum settings that result in network connection
 BOOTPROTO=none
 ONBOOT=yes
 IPADDR=your_static_ip
 NETMASK=your_netmask
 GATEWAY=your_gateway
 DNS1=primary_dns
-DNS2=secondary_dns
 
 #restart network manager
 sudo systemctl restart NetworkManager
